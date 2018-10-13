@@ -1,0 +1,21 @@
+<project name="powershell_conn" default="dist" basedir=".">
+    <property name="idmunit-core.dir" location="../../idmunit-core"/>
+
+    <property name="version" value="1.0"/>
+    <property name="connector.name" value="${ant.project.name}"/>
+    <property name="section.name" value="com.trivir.idmunit.connector.PowershellConnector.class"/>
+
+    <zipfileset file="" prefix="${connector.name}-${version}" id="dist-files"/>
+    <fileset file="doc/readme.txt" id="docs"/>
+    <fileset dir="lib" id="libs">
+        <include name="*.jar" />
+    </fileset>
+    <fileset dir="src" includes="**/*.java" id="src"/>
+
+    <path id="classpath">
+        <fileset file="${idmunit-core.dir}/lib/xom-1.2.3.jar"/>
+        <fileset refid="libs"/>
+    </path>
+
+    <import file="${idmunit-core.dir}/ant-build-connector.xml"/>
+</project>

@@ -1,0 +1,20 @@
+<project name="jdbc_conn" default="dist" basedir=".">
+    <property name="idmunit-core.dir" location="../../idmunit-core"/>
+
+    <property name="version" value="1.0"/>
+    <property name="connector.name" value="${ant.project.name}"/>
+    <property name="section.name" value="org.idmunit.connector.JDBC.class"/>
+
+    <zipfileset file=""  prefix="${connector.name}-${version}" id="dist-files"/>
+    <fileset file="doc/readme.txt" id="docs"/>
+    <fileset id="libs" dir=".">
+        <include name="lib/ojdbc5.jar"/>
+    </fileset>
+    <fileset dir="src" includes="**/*.java" id="src"/>
+
+    <path id="classpath">
+        <fileset refid="libs"/>
+    </path>
+
+    <import file="${idmunit-core.dir}/ant-build-connector.xml"/>
+</project>

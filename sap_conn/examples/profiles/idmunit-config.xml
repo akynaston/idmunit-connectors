@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<idmunit live-profile="trivirLab" enable-email-alerts="true" enable-log-alerts="true">
+	<alerts>
+		<alert name="TriVir">
+			<description>TriVir personnel will be notified if a test marked as "Critical" fails</description>
+			<smtp-server>smtp.MYSERVER.com</smtp-server>
+			<alert-sender>idmunitAlerts@idmunit.org</alert-sender>
+			<alert-recipient>bkynaston@trivir.com</alert-recipient>
+			<subject-prefix>IdMUnit Test Failed: </subject-prefix>
+			<log-path>c:/idmunitAlerts.log</log-path>
+		</alert>
+	</alerts>
+	<profiles>
+		<profile name="trivirLab">
+			<connection>
+				<name>SAP</name>
+				<description>Connector for the SAP HR Driver Publisher Channel</description>
+				<type>com.trivir.idmunit.connector.SAP</type>
+				<enable-scp>true</enable-scp>
+				<win-scp-exe-path>C:\idmunit\util\WinSCP\winscp.exe </win-scp-exe-path>
+				<!-- Used only when SCP connections are enabled -->
+				<scp-profile>DEVSAP</scp-profile>
+				<scp-script-path>C:\idmunit\util\WinSCP\winscpscript.txt</scp-script-path>
+				<scp-server-idoc-path>/usr/opt/DirXML/idocs</scp-server-idoc-path>
+				<sap-client-number>016</sap-client-number>
+				<!-- This is the distance between the left column of the IDoc and the actual start of data.  This should be checked against a live template to ensure accuracy -->
+				<initial-idoc-data-offset>64</initial-idoc-data-offset>
+				<!-- IDoc file name related configuration -->
+				<!-- Local path where IDocs will be stored before being transported to a remote server (if necessary) -->
+				<idoc-local-path>C:\idmunit\idocCache</idoc-local-path>
+				<idoc-transaction-prefix>0000000000</idoc-transaction-prefix>
+				<!-- File extension is optional but recommended in order to more easily identify and clean up IdMUnit-generated IDocs -->
+				<idoc-file-extension>idmunit</idoc-file-extension>
+				<multiplier>
+					<retry>0</retry>
+					<wait>0</wait>
+				</multiplier>
+				<substitutions>
+					<substitution>
+						<replace>%IDOCCACHE%</replace>
+						<new>C:\\idmunit\\CustomerTests\\test\\IDocTemplates</new>
+					</substitution>
+					<substitution>
+						<replace>%LASTNAME%</replace>
+						<new>PTestLast</new>
+					</substitution>
+					<substitution>
+						<replace>%WORKFORCEID%</replace>
+						<new>90000016</new>
+					</substitution>
+				</substitutions>
+			</connection>
+			<connection>
+				<name>META</name>
+				<description>Connector for the identity vault</description>
+				<type>org.idmunit.connector.LDAP</type>
+				<server>my.test.server.com</server>
+				<user>cn=admin,OU=Services,o=ABC</user>
+				<password>....</password>
+				<keystore-path/>
+				<multiplier>
+					<retry>0</retry>
+					<wait>0</wait>
+				</multiplier>
+				<substitutions>
+					<substitution>
+						<replace>%LASTNAME%</replace>
+						<new>PTestLast</new>
+					</substitution>
+					<substitution>
+						<replace>%CN%</replace>
+						<new>PTESTLR</new>
+					</substitution>
+					<substitution>
+						<replace>%WORKFORCEID%</replace>
+						<new>90000016</new>
+					</substitution>
+					<substitution>
+						<replace>%NOTESDRIVER%</replace>
+						<new>cn=NOTES-ABCRK R6,cn=IDMDriverSet,ou=SERVICES,o=ABC</new>
+					</substitution>
+				</substitutions>
+				<data-injections>
+					<data-injection>
+						<type>org.idmunit.injector.DateInjection</type>
+						<key>%TODAY%</key>
+						<format>yyyyMMdd</format>
+					</data-injection>
+					<data-injection>
+						<type>org.idmunit.injector.DateInjection</type>
+						<key>%TODAY+30%</key>
+						<format>yyyyMMdd</format>
+						<!-- Positive values will push the date forward X number of days, negative values will push the date back -->
+						<mutator>30</mutator>
+					</data-injection>
+					<data-injection>
+						<type>org.idmunit.injector.DateInjection</type>
+						<key>%TODAY-30%</key>
+						<format>yyyyMMdd</format>
+						<!-- Positive values will push the date forward X number of days, negative values will push the date back -->
+						<mutator>-30</mutator>
+					</data-injection>
+				</data-injections>
+			</connection>
+		</profile>
+	</profiles>
+</idmunit>

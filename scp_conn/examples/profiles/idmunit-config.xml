@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<idmunit live-profile="TrivirTest" enable-email-alerts="true" enable-log-alerts="true">
+	<alerts>
+		<alert name="TriVir">
+			<description>TriVir personnel will be notified if a test marked as "Critical" fails</description>
+			<smtp-server>smtp.MYSERVER.com</smtp-server>
+			<alert-sender>idmunitAlerts@idmunit.org</alert-sender>
+			<alert-recipient>bkynaston@trivir.com</alert-recipient>
+			<subject-prefix>IdMUnit Test Failed: </subject-prefix>
+			<log-path>c:/idmunitAlerts.log</log-path>
+		</alert>
+	</alerts>
+	<profiles>
+		<profile name="TriVirTest">
+			<connection>
+				<name>SCP</name>
+				<description>Connector to generate DTF data feed and push to an SCP interface on a UNIX server</description>
+				<type>com.trivir.idmunit.connector.SCPConnector</type>
+		        <!-- Delimited text generation section -->
+		        <write-path>/vm/trivirvm</write-path>
+		        <delimiter>,</delimiter>
+				<local-cache-path>C:\idmunit\dtfdata\</local-cache-path>
+		        <dtf-data-file-extension>csv</dtf-data-file-extension>
+				<!-- SCP Interface Configuration Section -->
+				<enable-scp>true</enable-scp>
+				<win-scp-exe-path>C:/Program Files/WinSCP/WinSCP.exe</win-scp-exe-path>
+				<scp-profile>trivirvm</scp-profile>
+				<multiplier>
+					<retry>0</retry>
+					<wait>0</wait>
+				</multiplier>
+				<substitutions>
+					<substitution>
+						<replace/>
+						<new/>
+					</substitution>
+				</substitutions>
+			</connection>
+		</profile>
+	</profiles>
+</idmunit>

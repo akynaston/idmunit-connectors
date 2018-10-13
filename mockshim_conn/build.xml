@@ -1,0 +1,21 @@
+<project name="mockshim_conn" default="dist" basedir=".">
+    <property name="idmunit-core.dir" location="../../idmunit-core"/>
+
+    <property name="version" value="1.1"/>
+    <property name="connector.name" value="${ant.project.name}"/>
+    <property name="section.name" value="org.idmunit.connector.MockShim.class"/>
+
+    <zipfileset file=""  prefix="${connector.name}-${version}" id="dist-files"/>
+    <fileset file="doc/readme.txt" id="docs"/>
+    <fileset id="libs" dir="lib">
+        <include name="*.jar" />
+    </fileset>	
+    <fileset dir="src" includes="**/*.java" id="src"/>
+
+    <path id="classpath">
+        <fileset refid="libs"/>
+        <fileset file="${idmunit-core.dir}/lib/slf4j-api-1.7.21.jar"/>
+    </path>
+
+    <import file="${idmunit-core.dir}/ant-build-connector.xml"/>
+</project>

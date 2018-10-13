@@ -1,0 +1,20 @@
+<project name="cmd_line_conn" default="dist" basedir=".">
+    <property name="idmunit-core.dir" location="../../idmunit-core"/>
+
+    <property name="version" value="1.0"/>
+    <property name="connector.name" value="${ant.project.name}"/>
+    <property name="section.name" value="com.trivir.idmunit.connector.CmdLineConnector.class"/>
+
+    <zipfileset file=""  prefix="${connector.name}-${version}" id="dist-files"/>
+    <fileset file="doc/readme.txt" id="docs"/>
+    <fileset dir="lib" id="libs">
+        <include name="*.jar" />
+    </fileset>
+    <fileset dir="src" includes="**/*.java" id="src"/>
+
+    <path id="classpath">
+        <fileset refid="libs"/>
+    </path>
+
+    <import file="${idmunit-core.dir}/ant-build-connector.xml"/>
+</project>

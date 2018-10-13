@@ -1,0 +1,7 @@
+One Identity Connector Bugs: 
+
+Query the ID for  startJob so it can use Job Name as the identifier
+Delete users operation
+
+jobID error message says JobID (capital J)
+same with tableName (TableName)

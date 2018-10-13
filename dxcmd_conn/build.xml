@@ -1,0 +1,18 @@
+<project name="dxcmd_conn" default="dist" basedir=".">
+    <property name="idmunit-core.dir" location="../../idmunit-core"/>
+
+    <property name="version" value="1.0"/>
+    <property name="connector.name" value="${ant.project.name}"/>
+    <property name="section.name" value="com.trivir.idmunit.connector.DxcmdConnector.class"/>
+
+    <zipfileset file=""  prefix="${connector.name}-${version}" id="dist-files"/>
+    <fileset file="doc/readme.txt" id="docs"/>
+    <fileset file="" id="libs"/>
+    <fileset dir="src" includes="**/*.java" id="src"/>
+
+    <path id="classpath">
+        <fileset file="${idmunit-core.dir}/lib/xom-1.2.3.jar"/>
+    </path>
+
+    <import file="${idmunit-core.dir}/ant-build-connector.xml"/>
+</project>

@@ -1,0 +1,21 @@
+<project name="mail_conn" default="dist" basedir=".">
+    <property name="idmunit-core.dir" location="../../idmunit-core"/>
+
+    <property name="version" value="1.0"/>
+    <property name="connector.name" value="${ant.project.name}"/>
+    <property name="section.name" value="com.trivir.idmunit.connector.MailConnector.class"/>
+
+    <zipfileset file="ThirdPartyLicenses.txt" prefix="${connector.name}-${version}" id="dist-files"/>
+    <fileset file="doc/readme.txt" id="docs"/>
+    <fileset file="lib/dumbster1.6.jar" id="libs"/>
+    <fileset dir="src" includes="**/*.java" id="src"/>
+
+    <path id="classpath">
+        <fileset file="${idmunit-core.dir}/lib/activation.jar"/>
+        <fileset file="${idmunit-core.dir}/lib/mail.jar"/>
+        <fileset file="${idmunit-core.dir}/lib/commons-lang.jar"/>		
+        <fileset refid="libs"/>
+    </path>
+
+    <import file="${idmunit-core.dir}/ant-build-connector.xml"/>
+</project>
