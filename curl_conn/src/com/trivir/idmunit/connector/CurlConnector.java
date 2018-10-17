@@ -104,8 +104,8 @@ public class CurlConnector extends AbstractConnector {
         }
 
         if (response.statusCode >= 400) {
-            if (response.statusCode == 400 && "delete".equals(method)) {
-                log.info("Ignoring 400 error because the operation was delete");
+            if (response.statusCode == 404 && "delete".equals(method)) {
+                log.info("Ignoring 404 error because the operation was delete");
             } else {
                 throw new IdMUnitException(String.format("opAction was unsuccessful. Response [status: '%s' reason: '%s' body: '%s']", response.statusCode, response.reasonPhrase, response.messageBody));
             }
