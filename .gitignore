@@ -2,6 +2,7 @@
 build/
 build.number
 dist/
+!**/lib/build/
 
 ### Eclipse ###
 bin/
