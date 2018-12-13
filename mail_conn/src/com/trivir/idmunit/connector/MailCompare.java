@@ -31,7 +31,6 @@ import com.trivir.idmunit.connector.mail.TemplateHelper;
 import org.idmunit.IdMUnitException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-//TODO: Use XOM
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -48,7 +47,6 @@ import java.util.regex.Matcher;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.idmunit.connector.ConnectorUtil.getFirstValue;
 import static org.idmunit.connector.ConnectorUtil.getSingleValue;
-
 
 public class MailCompare {
 
@@ -265,42 +263,28 @@ public class MailCompare {
         }
 
         if (!compareResult) {
-            Map<String, Map<String, String>> misMatches = getMismatches(messageBody, templateData, expectedAttrs);
+            Collection<Map<String, String>> misMatches = getTemplateMismatches(messageBody, templateData, expectedAttrs);
 
             // Print out results; all keys may not be populated
-            for (String s : misMatches.keySet()) {
+            for (Map<String, String> map : misMatches) {
                 StringBuilder sb = new StringBuilder();
 
                 String component;
-                component = misMatches.get(s).get("key");
-                if (component != null) {
-                    sb.append("Key:      [");
-                    sb.append(component);
-                    sb.append("]\n");
-                }
-
-                component = misMatches.get(s).get("value");
-                if (component != null) {
-                    sb.append("Value:    [");
-                    sb.append(component);
-                    sb.append("]\n");
-                }
-
-                component = misMatches.get(s).get("template");
+                component = map.get("template");
                 if (component != null) {
                     sb.append("Template: [");
                     sb.append(component);
                     sb.append("]\n");
                 }
 
-                component = misMatches.get(s).get("expected");
+                component = map.get("expected");
                 if (component != null) {
                     sb.append("Expected: [");
                     sb.append(component);
                     sb.append("]\n");
                 }
 
-                component = misMatches.get(s).get("actual");
+                component = map.get("actual");
                 if (component != null) {
                     sb.append("Actual:   [");
                     sb.append(component);
@@ -328,12 +312,12 @@ public class MailCompare {
      * Note: Ignores case as email address seem to be case-less.
      * storing results when a failure occurs.
      *
-     * @param allResults A list containing expected-but-was style human readable strings.
-     * @param attrName The name of the email field: To, From, Bcc, or Cc.
-     * @param actualValues The list of the field's actual values.
+     * @param allResults     A list containing expected-but-was style human readable strings.
+     * @param attrName       The name of the email field: To, From, Bcc, or Cc.
+     * @param actualValues   The list of the field's actual values.
      * @param expectedRegexs A list of regexs to match actual values against.
-     * Note: If only one regex is provided, it must match all actual valuesactual addresses.
-     * Note: If more than one regex is provided, each regex must match at least one actual value.
+     *     Note: If only one regex is provided, it must match all actual valuesactual addresses.
+     *     Note: If more than one regex is provided, each regex must match at least one actual value.
      */
     private static void compareMultiValues(List<String> allResults, String attrName, List<String> expectedRegexs, List<String> actualValues) {
         if (expectedRegexs == null) {
@@ -479,13 +463,13 @@ public class MailCompare {
 
     }
 
-    private static Map<String, Map<String, String>> getMismatches(
+    private static Collection<Map<String, String>> getTemplateMismatches(
             String message,
             String template,
             Map<String, Collection<String>> substitutions)
             throws IdMUnitException {
 
-        Map<String, Map<String, String>> misMatches = new HashMap<String, Map<String, String>>();
+        Collection<Map<String, String>> misMatches = new LinkedList<Map<String, String>>();
 
         message = normalizeText(message);
         Document messageDom = TemplateHelper.toDocument(message);
@@ -502,9 +486,13 @@ public class MailCompare {
      * This assumes that the messageDom and templateDom have the exact same structure.
      * Need to add more error checking if that's not the case.
      */
-    private static void compareNodes(Node messageNode, Node templateNode, Map<String, Collection<String>> substitutions, Map<String, Map<String, String>> misMatches) {
-        // Compare the current node
-        compareCurrentNode(messageNode, templateNode, substitutions, misMatches);
+    private static void compareNodes(Node messageNode, Node templateNode, Map<String, Collection<String>> substitutions, Collection<Map<String, String>> misMatches) {
+
+        if (!templateNode.hasChildNodes()) {
+            // We're only interested in comparing the leaf nodes because that's where the text is
+            // Compare the leaf node
+            compareNode(messageNode, templateNode, substitutions, misMatches);
+        }
 
         // Recursively call child nodes
         if ((messageNode.getFirstChild() != null) && (templateNode.getFirstChild() != null)) {
@@ -522,52 +510,50 @@ public class MailCompare {
         return (toMap == null) ? mapTo : toMap;
     }
 
-    private static void compareCurrentNode(
+    private static void compareNode(
             Node messageNode,
             Node templateNode,
             Map<String, Collection<String>> substitutions,
-            Map<String, Map<String, String>> misMatches) {
-        // Only interested in comparing the leaf nodes - where the text is
-        if (templateNode.hasChildNodes()) {
-            return;
-        }
+            Collection<Map<String, String>> misMatches) {
 
-        boolean containsTokens = false;
+        //figure out which substituions are tokens based upon the template text
         String templateText = mapNull(templateNode.getTextContent(), "");
-        String messageText = mapNull(messageNode.getTextContent(), "");
+        String upperTemplateText = templateText.toUpperCase();
+        Map<String, Collection<String>> tokens = new HashMap<String, Collection<String>>();
+        for (Map.Entry<String, Collection<String>> entry : substitutions.entrySet()) {
+            String key = entry.getKey();
+            Collection<String> values = entry.getValue();
+            if (isBlank(entry.getKey())) {
+                continue;
+            }
+            if ((values == null) || values.isEmpty() || (values.iterator().next() == null) || values.iterator().next().isEmpty()) {
+                // It's conceivable that a token has an all whitespace value but no value, a null value, or and empty
+                //  string value doesn't make sense
+                continue;
+            }
 
-        // Loop through all of the substitutions to see if this node contains one of them.
-        for (String s : substitutions.keySet()) {
-            if (templateText.toUpperCase().contains(DELIM_TOKEN + s.toUpperCase() + DELIM_TOKEN)) {
-                containsTokens = true;
-                // If it does, perform the substitution, then see if that text is in the message node
-                String expected = performTokenSubstitutions(templateText, substitutions);
-
-                if (!messageText.equals(expected)) {
-
-                    // If it doesn't match what in the message node, add it to the misMatches list
-                    Map<String, String> misMatchMap = new HashMap<String, String>();
-                    misMatchMap.put("expected", expected);
-                    misMatchMap.put("actual", messageText);
-                    misMatchMap.put("template", templateText);
-                    misMatchMap.put("key", s);
-                    misMatchMap.put("value", substitutions.get(s).iterator().next());
-
-                    misMatches.put(s, misMatchMap);
-                }
+            String upperKey = key.toUpperCase();
+            if (upperTemplateText.contains(DELIM_TOKEN + upperKey + DELIM_TOKEN)) {
+                tokens.put(key, values);
             }
         }
 
-        // Added literal text comparison because templates were comparing unequal but not due to substitution
-        //  problems and there was no output as to why.
-        if (!containsTokens && !templateText.equals(messageText)) {
-            Map<String, String> misMatchMap = new HashMap<String, String>();
-            misMatchMap.put("expected", templateText);
-            misMatchMap.put("actual", messageText);
+        String messageText = mapNull(messageNode.getTextContent(), "");
 
-            // A bit of a hack; had to find a way to smuggle literal text mismatches out of this method; the value of
-            //  the text node is probably unique enough.
-            misMatches.put(messageText, misMatchMap);
+        if (!tokens.isEmpty()) {
+            // If we have tokens, perform the substitutions and check to see that the returned text matches the message
+            //  text; otherwise, just compare the email fields other than body to ensure an email was sent and to
+            //  ensure backward compatibility
+            String expected = performTokenSubstitutions(templateText, tokens);
+            if (!messageText.equals(expected)) {
+
+                // If it doesn't match what in the message node, add it to the misMatches list
+                Map<String, String> misMatchMap = new HashMap<String, String>();
+                misMatchMap.put("expected", expected);
+                misMatchMap.put("actual", messageText);
+                misMatchMap.put("template", templateText);
+                misMatches.add(misMatchMap);
+            }
         }
     }
 

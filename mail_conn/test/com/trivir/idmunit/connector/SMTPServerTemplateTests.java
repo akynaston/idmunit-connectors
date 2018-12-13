@@ -53,8 +53,10 @@ public class SMTPServerTemplateTests extends MailTemplateTestBase {
 
         ldapConnector = ConfigTests.newLdapConnector();
 
-        //create the email template
+        //delete and create the email template
         Map<String, Collection<String>> attrs = ConfigTests.newTemplateAddAttrs();
+
+        ldapConnector.opDeleteObject(attrs);
         ldapConnector.opAddObject(attrs);
     }
 
