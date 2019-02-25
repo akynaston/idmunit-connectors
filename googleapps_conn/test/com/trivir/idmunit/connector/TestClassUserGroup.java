@@ -631,13 +631,12 @@ public class TestClassUserGroup extends TestCase {
     public void testValidateNoValue() throws IdMUnitException {
 
         //NOTE: users are created without phonenumbers
-        Map<String, Collection<String>> dataCopy = new HashMap<>(data);
+        Map<String, Collection<String>> dataCopy = new HashMap<String, Collection<String>>(data);
         conn.opCreateObject(dataCopy);
 
         User user = UserApi.getUser(conn.getRestClient(), USER_NAME);
 
-        Map<String, Collection<String>> map = new HashMap<String, Collection<String>>();
-        map = EntityConverter.userToMap(user);
+        Map<String, Collection<String>> map = EntityConverter.userToMap(user);
         map.put(SYNTHETIC_ATTR_OBJECT_CLASS, Arrays.asList(User.Schema.CLASS_NAME));
         map.put(User.Schema.ATTR_USERNAME, Arrays.asList(USER_NAME));
         map.put(User.Schema.ATTR_PHONE_WORK, Arrays.asList(GoogleAppsConnector.EMPTY_VAL));
@@ -733,6 +732,44 @@ public class TestClassUserGroup extends TestCase {
         }
 
         map.remove(User.Schema.ATTR_PASSWORD);
+        conn.opValidateObject(map);
+
+        conn.opDeleteObject(map);
+    }
+
+    public void testCreateAndValidateUserWithOrgUnitPath() throws IdMUnitException {
+
+        Map<String, Collection<String>> map = new HashMap<String, Collection<String>>(data);
+        conn.opDeleteObject(map);
+
+        //same as ou
+        map.put(User.Schema.ATTR_ORG_UNIT_PATH, Collections.singletonList("/"));
+        conn.opCreateObject(map);
+
+        map.remove(User.Schema.ATTR_PASSWORD);
+        map.remove(Group.Schema.ATTR_GROUP_DESCRIPTION);
+        map.remove(Group.Schema.ATTR_GROUP_EMAIL);
+        map.remove(Group.Schema.ATTR_GROUP_NAME);
+        map.remove(Group.Schema.ATTR_GROUP_ROLE);
+        conn.opValidateObject(map);
+
+        conn.opDeleteObject(map);
+    }
+
+    public void testCreateAndValidateUserWithOu() throws IdMUnitException {
+
+        Map<String, Collection<String>> map = new HashMap<String, Collection<String>>(data);
+        conn.opDeleteObject(map);
+
+        //same as orgUnitPath
+        map.put(User.Schema.ATTR_OU, Collections.singletonList("/"));
+        conn.opCreateObject(map);
+
+        map.remove(User.Schema.ATTR_PASSWORD);
+        map.remove(Group.Schema.ATTR_GROUP_DESCRIPTION);
+        map.remove(Group.Schema.ATTR_GROUP_EMAIL);
+        map.remove(Group.Schema.ATTR_GROUP_NAME);
+        map.remove(Group.Schema.ATTR_GROUP_ROLE);
         conn.opValidateObject(map);
 
         conn.opDeleteObject(map);

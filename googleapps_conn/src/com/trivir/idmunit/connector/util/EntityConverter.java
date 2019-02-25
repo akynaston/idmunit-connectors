@@ -84,6 +84,12 @@ public class EntityConverter {
         String familyName = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_FAMILY_NAME);
         String password = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_PASSWORD);
         String orgUnitPath = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_ORG_UNIT_PATH);
+        if (isBlank(orgUnitPath)) {
+            //both ou and orgUnitPath map to the Google attribute orgUnitPath in connector; unfortunately, the order is
+            // the opposite of modify user; maintain order for backward compatibility
+            orgUnitPath =  ConnectorUtil.getSingleValue(data, User.Schema.ATTR_OU);
+        }
+
         String strIncludeInGlobalAddressList = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_INCLUDE_IN_GLOBAL_ADDRESS_LIST);
         Boolean includeInGlobalAddressList = null;
         if (!isBlank(strIncludeInGlobalAddressList)) {
@@ -426,8 +432,10 @@ public class EntityConverter {
             }
             //userAttrs.put(ATTR_EMPLOYEE_ID, new ArrayList(){{add(employeeId);}});
         }
-        if (!isBlank(ou)) {
+        if (!isBlank(ou, false)) {
+            //allow validation on either attribute name
             userAttrs.put(User.Schema.ATTR_OU, Collections.singletonList(ou));
+            userAttrs.put(User.Schema.ATTR_ORG_UNIT_PATH, Collections.singletonList(ou));
         }
 
         return userAttrs;

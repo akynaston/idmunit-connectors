@@ -142,6 +142,7 @@ public final class UserApi {
 
     public static void deleteUser(RestClient rest, String username) throws IdMUnitException {
         checkNotNull("rest", rest);
+        checkNotBlank("username", username);
 
         RestClient.Response response = rest.executeDelete(String.format(PATH_USER, username));
         // If the user doesn't exist then the status code will be
@@ -206,7 +207,7 @@ public final class UserApi {
         checkNotNull("user", toInsert);
 
         //allow for " " values for backward compatibility
-        if (isBlank(toInsert.getPrimaryEmail(), false)) {
+        if (isBlank(toInsert.getPrimaryEmail())) { //email cannot be blank
             throw new IdMUnitException("Error: username is empty and should be populated");
         } else if (isBlank(toInsert.getGivenName(), false)) {
             throw new IdMUnitException("Error: givenName is empty and should be populated");

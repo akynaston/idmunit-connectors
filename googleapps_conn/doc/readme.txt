@@ -72,7 +72,7 @@ when creating a user account. It is optional when updating a user and should onl
 their account password.
 * suspended (single-valued, boolean) - Indicates if the user is suspended.
 * mustChangePassword (single-valued, boolean) - Require user to change password at next login
-* ou (single-valued, string) - Organizational unit
+* ou or orgUnitPath (single-valued, string) - Organizational unit
 * orgName (single-valued, string) - Organization name
 * orgTitle (single-valued, string) - The user's title within the organization, for example 'member' or 'engineer'.
 * orgDepartment (single-valued, string)- Specifies the department within the organization, such as 'sales' or

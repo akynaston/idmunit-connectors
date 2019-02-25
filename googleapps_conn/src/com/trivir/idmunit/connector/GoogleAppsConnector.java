@@ -180,13 +180,18 @@ public class GoogleAppsConnector extends AbstractConnector {
         String objectClass = ConnectorUtil.getSingleValue(data, SYNTHETIC_ATTR_OBJECT_CLASS);
         data.remove(SYNTHETIC_ATTR_OBJECT_CLASS);
 
-        if (isBlank(objectClass, false)) {
+        if (isBlank(objectClass)) { //cannot be blank
             throw new IdMUnitException("No objectClass specified.");
         }
 
         if (Group.Schema.CLASS_NAME.equalsIgnoreCase(objectClass)) {
             createGroup(data);
         } else if (User.Schema.CLASS_NAME.equalsIgnoreCase(objectClass)) {
+            String username = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_USERNAME);
+            if (isBlank(username)) { //cannot be blank
+                throw new IdMUnitException("Username must be specified.");
+            }
+
             boolean useFamilyNamePlaceholder = false;
             if (isBlank(ConnectorUtil.getSingleValue(data, User.Schema.ATTR_FAMILY_NAME), false)) {
                 useFamilyNamePlaceholder = true;
@@ -244,7 +249,7 @@ public class GoogleAppsConnector extends AbstractConnector {
         String objectClass = ConnectorUtil.getSingleValue(data, SYNTHETIC_ATTR_OBJECT_CLASS);
         data.remove(SYNTHETIC_ATTR_OBJECT_CLASS);
 
-        if (isBlank(objectClass, false)) {
+        if (isBlank(objectClass)) {  //cannot be blank
             throw new IdMUnitException("No objectClass specified.");
         }
 
@@ -266,7 +271,7 @@ public class GoogleAppsConnector extends AbstractConnector {
         String objectClass = ConnectorUtil.getSingleValue(data, SYNTHETIC_ATTR_OBJECT_CLASS);
         data.remove(SYNTHETIC_ATTR_OBJECT_CLASS);
 
-        if (isBlank(objectClass, false)) {
+        if (isBlank(objectClass)) { //cannot be blank
             throw new IdMUnitException("No objectClass specified.");
         }
 
@@ -289,7 +294,12 @@ public class GoogleAppsConnector extends AbstractConnector {
         String password = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_PASSWORD);
         String suspended = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_SUSPENDED);
         String mustChangePassword = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_CHANGE_PASSWORD);
-        String ou = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_OU);
+        String orgUnitPath = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_OU);
+        if (isBlank(orgUnitPath, false)) {
+            //both ou and orgUnitPath map to the Google attribute orgUnitPath in this connector; maintain order for
+            // backward compatibility
+            orgUnitPath = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_ORG_UNIT_PATH);
+        }
         String orgName = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_ORG_NAME);
         String orgTitle = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_ORG_TITLE);
         String orgDepartment = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_ORG_DEPARTMENT);
@@ -300,7 +310,7 @@ public class GoogleAppsConnector extends AbstractConnector {
         String mobilePhone = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_PHONE_MOBILE);
         String strIncludeInGlobalAddressList = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_INCLUDE_IN_GLOBAL_ADDRESS_LIST);
 
-        if (isBlank(username, false)) {
+        if (isBlank(username)) { //cannot be blank
             throw new IdMUnitException("Username must be specified.");
         }
 
@@ -404,8 +414,8 @@ public class GoogleAppsConnector extends AbstractConnector {
             userJson.addProperty("changePasswordAtNextLogin", value);
         }
 
-        if (ou != null && !"".equals(ou)) {
-            userJson.addProperty("orgUnitPath", ou);
+        if (orgUnitPath != null && !"".equals(orgUnitPath)) {
+            userJson.addProperty(User.Schema.ATTR_ORG_UNIT_PATH, orgUnitPath);
         }
 
         //set to true, false, or remove property
@@ -425,7 +435,7 @@ public class GoogleAppsConnector extends AbstractConnector {
         String objectClass = ConnectorUtil.getSingleValue(data, SYNTHETIC_ATTR_OBJECT_CLASS);
         data.remove(SYNTHETIC_ATTR_OBJECT_CLASS);
 
-        if (isBlank(objectClass, false)) {
+        if (isBlank(objectClass)) { //cannot be blank
             throw new IdMUnitException("No objectClass specified.");
         }
 
@@ -470,7 +480,7 @@ public class GoogleAppsConnector extends AbstractConnector {
         String objectClass = ConnectorUtil.getSingleValue(data, SYNTHETIC_ATTR_OBJECT_CLASS);
         data.remove(SYNTHETIC_ATTR_OBJECT_CLASS);
 
-        if (isBlank(objectClass, false)) {
+        if (isBlank(objectClass)) { //cannot be blank
             throw new IdMUnitException("No objectClass specified.");
         }
 
@@ -519,7 +529,7 @@ public class GoogleAppsConnector extends AbstractConnector {
         //mapping prevents NullPointerException on call to groupRole.toUpperCase()
         final String groupRole = mapNull(ConnectorUtil.getSingleValue(data, Group.Schema.ATTR_GROUP_ROLE), "");
 
-        if (isBlank(groupEmail, false) || isBlank(username, false)) {
+        if (isBlank(groupEmail, false) || isBlank(username)) {  //username cannot be blank
             throw new IdMUnitException(String.format("Both '%s' and '%s' must be specified.", Group.Schema.ATTR_GROUP_EMAIL, User.Schema.ATTR_USERNAME));
         } else if (!validEmail(groupEmail) || !validEmail(username)) {
             throw new IdMUnitException(String.format("Both '%s' and '%s' must be valid email addresses.", groupEmail, username));
@@ -554,7 +564,7 @@ public class GoogleAppsConnector extends AbstractConnector {
         final String groupEmail = ConnectorUtil.getSingleValue(data, Group.Schema.ATTR_GROUP_EMAIL);
         final String username = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_USERNAME);
 
-        if (isBlank(groupEmail, false) || isBlank(username, false)) {
+        if (isBlank(groupEmail, false) || isBlank(username)) {  //username cannot be blank
             throw new IdMUnitException(String.format("Both '%s' and '%s' must be specified.", Group.Schema.ATTR_GROUP_EMAIL, User.Schema.ATTR_USERNAME));
         } else if (!validEmail(groupEmail) || !validEmail(username)) {
             throw new IdMUnitException(String.format("Both '%s' and '%s' must be valid email addresses.", groupEmail, username));
@@ -581,10 +591,10 @@ public class GoogleAppsConnector extends AbstractConnector {
         String username = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_USERNAME);
         String newUsername = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_NEW_USERNAME);
 
-        if (isBlank(username, false)) {
+        if (isBlank(username)) { //cannot be blank
             throw new IdMUnitException("Username must be specified.");
         }
-        if (isBlank(newUsername, false)) {
+        if (isBlank(newUsername)) {  //cannot be blank
             throw new IdMUnitException("newUsername must be specified for rename operations.");
         }
 
@@ -607,7 +617,7 @@ public class GoogleAppsConnector extends AbstractConnector {
         String objectClass = ConnectorUtil.getSingleValue(data, SYNTHETIC_ATTR_OBJECT_CLASS);
         data.remove(SYNTHETIC_ATTR_OBJECT_CLASS);
 
-        if (isBlank(objectClass, false)) {
+        if (isBlank(objectClass)) { //cannot be blank
             throw new IdMUnitException("No objectClass specified.");
         }
 
@@ -655,6 +665,10 @@ public class GoogleAppsConnector extends AbstractConnector {
 
     private void validateUser(Map<String, Collection<String>> srcAttrs) throws IdMUnitException {
         String username = ConnectorUtil.getSingleValue(srcAttrs, User.Schema.ATTR_USERNAME);
+        if (isBlank(username)) {  //cannot be blank
+            throw new IdMUnitException("Username must be specified");
+        }
+
         User userEntry = UserApi.getUser(restClient, username);
 
         if (userEntry == null) {
