@@ -444,8 +444,13 @@ public class TestClassUserGroup extends TestCase {
         assertNull(user.getMobilePhone());
     }
 
+    //BUG: This feature used to work, but as of 20190225 it's broken; I think it has to do with Google's newer multi-phase
+    // authentication approach: 1) select "Use another acccount" on the first page, 2) enter the username on the second,
+    // 3) then the password on the third. It may make more sense to record and replay this interaction than try to
+    // script it in Java, especially now that the form isn't part of the base HTML page
     public void testValidateUserPasswordSuccess() throws IdMUnitException {
         conn.opCreateObject(data);
+
         User user = UserApi.getUser(conn.getRestClient(), USER_NAME);                //We have to run getUser before validating password.
         assertTrue(user.getGivenName().equals(GIVEN_NAME));
         assertTrue(user.getFamilyName().equals(FAMILY_NAME));
@@ -827,7 +832,7 @@ public class TestClassUserGroup extends TestCase {
 
         conn.opCreateObject(map);
         //check for non-value
-        map.put(User.Schema.ATTR_ORG_UNIT_PATH, Arrays.asList(GoogleAppsConnector.EMPTY_VAL));
+        map.put(User.Schema.ATTR_PHONE_WORK, Arrays.asList(GoogleAppsConnector.EMPTY_VAL));
         //password isn't returned; user validator doesn't check group attributes
         map.remove(User.Schema.ATTR_PASSWORD);
         map.remove(Group.Schema.ATTR_GROUP_DESCRIPTION);
