@@ -745,7 +745,6 @@ public class TestClassUserGroup extends TestCase {
     public void testCreateAndValidateUserWithOrgUnitPath() throws IdMUnitException {
 
         Map<String, Collection<String>> map = new HashMap<String, Collection<String>>(data);
-        conn.opDeleteObject(map);
 
         //same as ou
         map.put(User.Schema.ATTR_ORG_UNIT_PATH, Collections.singletonList("/"));
@@ -757,14 +756,11 @@ public class TestClassUserGroup extends TestCase {
         map.remove(Group.Schema.ATTR_GROUP_NAME);
         map.remove(Group.Schema.ATTR_GROUP_ROLE);
         conn.opValidateObject(map);
-
-        conn.opDeleteObject(map);
     }
 
     public void testCreateAndValidateUserWithOu() throws IdMUnitException {
 
         Map<String, Collection<String>> map = new HashMap<String, Collection<String>>(data);
-        conn.opDeleteObject(map);
 
         //same as orgUnitPath
         map.put(User.Schema.ATTR_OU, Collections.singletonList("/"));
@@ -776,8 +772,6 @@ public class TestClassUserGroup extends TestCase {
         map.remove(Group.Schema.ATTR_GROUP_NAME);
         map.remove(Group.Schema.ATTR_GROUP_ROLE);
         conn.opValidateObject(map);
-
-        conn.opDeleteObject(map);
     }
 
     //TODO: validate simple User and complex User
