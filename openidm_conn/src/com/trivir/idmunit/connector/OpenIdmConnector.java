@@ -194,7 +194,7 @@ public class OpenIdmConnector extends AbstractConnector {
             JsonObject linkJson = (JsonObject)parser.parse(links);
 
             for (JsonElement e : linkJson.getAsJsonArray("result")) {
-                rest.executeDelete("/repo/links/" + e.getAsJsonObject().get("_id").getAsString(), e.getAsJsonObject().get("_rev").getAsString());
+                rest.executeDelete("/repo/link/" + e.getAsJsonObject().get("_id").getAsString(), e.getAsJsonObject().get("_rev").getAsString());
             }
         }
 
@@ -424,8 +424,7 @@ public class OpenIdmConnector extends AbstractConnector {
                 throw new RuntimeException(e);
             }
 
-
-            String url = "/repo/links/?_queryFilter=" + queryFilter;
+        String url = "/repo/link/?_queryFilter=" + queryFilter;
 
             RestClient.Response response = rest.executeGet(url);
             JsonObject searchResults = new JsonParser().parse(response.messageBody).getAsJsonObject();

@@ -28,12 +28,13 @@
 
 package com.trivir.idmunit.connector;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import junit.framework.TestCase;
 import org.idmunit.IdMUnitException;
 import org.idmunit.IdMUnitFailureException;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.sql.*;
 import java.sql.Statement;
 import java.util.*;
@@ -55,6 +56,29 @@ public class OpenIdmConnectorTests extends TestCase {
         CONFIG.put(PASSWORD, "openidm-admin");
     }
 
+    private static void deleteManagedUser(RestClient rest, String userId) throws UnsupportedEncodingException, IdMUnitException {
+        final String queryFilter = URLEncoder.encode("firstId eq \"" + userId + "\" or secondId eq \"" + userId + "\"", "UTF-8");
+        final JsonParser parser = new JsonParser();
+
+        RestClient.Response response = rest.executeGet("/repo/link?_queryFilter=" + queryFilter);
+        String json = response.messageBody;
+        JsonObject object = parser.parse(json).getAsJsonObject();
+        JsonArray array = object.getAsJsonArray("result");
+        Iterator<JsonElement> iter = array.iterator();
+        while(iter.hasNext()) {
+            object = iter.next().getAsJsonObject();
+            String id = object.getAsJsonPrimitive("_id").getAsString();
+            String rev = object.getAsJsonPrimitive("_rev").getAsString();
+            rest.executeDelete("/repo/link/" + id, rev);
+        }
+
+        try {
+            rest.executeDelete("/managed/user/" + userId);
+        } catch (RestError e) {
+            //ignore
+        }
+    }
+
     private OpenIdmConnector connector;
 
     public void setUp() throws Exception {
@@ -64,24 +88,9 @@ public class OpenIdmConnectorTests extends TestCase {
 
     public void tearDown() throws Exception {
         RestClient rest = RestClient.init(TEST_SERVER, "8080", "openidm-admin", "openidm-admin", false);
-        try {
-            rest.executeDelete("/managed/user/tuser2_id");
-        } catch (IdMUnitException ignore) {
-            // ignore any error cleaning up
-        }
+        final String userId = "tuser2_id";
 
-        Connection conn = null;
-        Class.forName("com.mysql.jdbc.Driver").newInstance();
-        try {
-            conn = DriverManager.getConnection("jdbc:mysql://" + TEST_SERVER + "/openidm?user=openidm&password=openidm");
-        } catch (SQLException e) {
-            throw new Exception("unable to connect to database", e);
-        }
-
-        if (conn != null) {
-            Statement statement = conn.createStatement();
-            statement.executeUpdate("DELETE FROM links");
-        }
+        deleteManagedUser(rest, userId);
 
         connector.tearDown();
     }
@@ -180,6 +189,47 @@ public class OpenIdmConnectorTests extends TestCase {
         }
     }
 
+    public void testDeleteSimple() throws IdMUnitException {
+        RestClient rest = RestClient.init(TEST_SERVER, "8080", "openidm-admin", "openidm-admin", false);
+
+        Map<String, Collection<String>> createAttrs = new HashMap<String, Collection<String>>();
+        createAttrs.put("userName", singleValue("bwayne"));
+        createAttrs.put("givenName", singleValue("Bruce"));
+        createAttrs.put("sn", singleValue("Wayne"));
+        createAttrs.put("mail", singleValue("BadTest@yahooligans.com"));
+        createAttrs.put("_id", singleValue("bwayneid"));
+        createAttrs.put("objectType", singleValue("user"));
+
+        connector.opAddObject(createAttrs);
+        try {
+
+            RestClient.Response response = rest.executeGet("/managed/user/bwayneid?_fields=*,*_ref");
+            JsonObject user = new JsonParser().parse(response.messageBody).getAsJsonObject();
+            assertEquals("\"bwayneid\"", user.get("_id").toString());
+
+            Map<String, Collection<String>> deleteAttrs = new HashMap<String, Collection<String>>();
+            deleteAttrs.put("_id", singleValue("bwayneid"));
+            deleteAttrs.put("objectType", singleValue("user"));
+            connector.opDeleteObject(deleteAttrs);
+
+            try {
+                rest.executeGet("/managed/user/bwayneid?_fields=*,*_ref");
+                fail("User shouldn't exist");
+            } catch (RestError err) {
+                assertEquals("404", err.getErrorCode());
+            }
+        } catch (IdMUnitException e) {
+            e.printStackTrace();
+
+        } finally {
+            try {
+                rest.executeDelete("/managed/user/bwayneid");
+            } catch (RestError err) {
+                //ignore
+            }
+        }
+    }
+
     public void testAddBooleanAttr() throws IdMUnitException {
         RestClient rest = RestClient.init(TEST_SERVER, "8080", "openidm-admin", "openidm-admin", false);
 
@@ -274,58 +324,226 @@ public class OpenIdmConnectorTests extends TestCase {
     }
 
 
-    public void testDeleteUserPlusLinks() throws IdMUnitException {
-        RestClient rest = RestClient.init(TEST_SERVER, "8080", "openidm-admin", "openidm-admin", false);
-        String createAttrs = "{\n" +
-                "        \"userName\":\"tuser2\",\n" +
-                "        \"givenName\":\"Test\",\n" +
-                "        \"sn\":\"User\",\n" +
-                "        \"mail\":\"tuser@example.com\",\n" +
-                "        \"telephoneNumber\":\"555-555-1212\",\n" +
-                "        \"password\":\"T3stPassw0rd\",\n" +
-                "        \"description\":\"My user to validate\",\n" +
-                "        \"_id\":\"tuser2_id\"\n" +
-                "        \n" +
-                "    }";
+    public void testDeleteUserPlusLinks() throws IdMUnitException, UnsupportedEncodingException {
+        final RestClient rest = RestClient.init(TEST_SERVER, "8080", "openidm-admin", "openidm-admin", false);
+        final String userId = "tuser2_id";
+        final JsonParser parser = new JsonParser();
 
-        Connection conn;
-        Statement statement;
+        deleteManagedUser(rest, userId);
+
         try {
-            rest.executePost("/managed/user?_action=create", createAttrs);
-            Class.forName("oracle.jdbc.driver.OracleDriver");
-            conn = DriverManager.getConnection("jdbc:oracle:thin:@" + TEST_SERVER + ":1521:forgd", "openidm45test", "trivir");
-            statement = conn.createStatement();
+            //create user
+            String createJson = "{\n" +
+                    "        \"userName\":\"tuser2\",\n" +
+                    "        \"givenName\":\"Test\",\n" +
+                    "        \"sn\":\"User\",\n" +
+                    "        \"mail\":\"tuser@example.com\",\n" +
+                    "        \"telephoneNumber\":\"555-555-1212\",\n" +
+                    "        \"password\":\"T3stPassw0rd\",\n" +
+                    "        \"description\":\"My user to validate\",\n" +
+                    "        \"_id\":\"" + userId + "\"\n" +
+                    "        \n" +
+                    "    }";
+            rest.executePost("/managed/user?_action=create", createJson);
 
-            System.out.println("verifying no links presently in table....");
-            ResultSet rs = statement.executeQuery("SELECT * FROM \"OPENIDM45TEST\".\"LINKS\""); //we should return no values in the table
-            if (rs.next()) {
-                fail("There are entries in the table, please clear entries before running test.");
-            }
+            //create links
+            createJson = "{\n" +
+                    "    \"_rev\":\"0\",\n" +
+                    "    \"linkType\":\"AD_managedUser\",\n" +
+                    "    \"linkQualifier\":\"default\",\n" +
+                    "    \"firstId\":\"" + userId + "\",\n" +
+                    "    \"secondId\":\"67890\"\n" +
+                    "}";
+            rest.executePost("/repo/link?_action=create", createJson);
+            createJson = "{\n" +
+                    "    \"_rev\":\"0\",\n" +
+                    "    \"linkType\":\"AD_managedUser\",\n" +
+                    "    \"linkQualifier\":\"default\",\n" +
+                    "    \"firstId\":\"67891\",\n" +
+                    "    \"secondId\":\"" + userId + "\"\n" +
+                    "}";
+            rest.executePost("/repo/link?_action=create", createJson);
+            createJson = "{\n" +
+                    "    \"_rev\":\"0\",\n" +
+                    "    \"linkType\":\"AD_managedUser\",\n" +
+                    "    \"linkQualifier\":\"default1\",\n" +
+                    "    \"firstId\":\"09876\",\n" +
+                    "    \"secondId\":\"" + userId + "\"\n" +
+                    "}";
+            rest.executePost("/repo/link?_action=create", createJson);
 
-            statement.executeUpdate("INSERT INTO \"OPENIDM45TEST\".\"LINKS\" VALUES ('54321','0','AD_managedUser','default','tuser2_id','67890')");
-            statement.executeUpdate("INSERT INTO \"OPENIDM45TEST\".\"LINKS\" VALUES ('54322','0','AD_managedUser','default','67891','tuser2_id')");
-            statement.executeUpdate("INSERT INTO \"OPENIDM45TEST\".\"LINKS\" VALUES ('54323','0','AD_managedUser','default1','09876','tuser2_id')");
-            statement.execute("commit");
+            String queryFilter = URLEncoder.encode("firstId eq \"" + userId + "\" or secondId eq \"" + userId + "\"", "UTF-8");
 
-            System.out.println("checking for created links...");
-            ResultSet res = statement.executeQuery("SELECT * FROM OPENIDM45TEST.LINKS"); //we should return 3 values in the table.
-            int rowCount = 0;
-            while (res.next()) {
-                rowCount++;
-            }
-            assertEquals(3, rowCount);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } finally {
+            RestClient.Response response = rest.executeGet("/repo/link?_queryFilter=" + queryFilter);
+            String json = response.messageBody;
+            JsonObject object = parser.parse(json).getAsJsonObject();
+            JsonArray array = object.getAsJsonArray("result");
+            assertEquals(3, array.size());
 
             Map<String, Collection<String>> userInfo = new HashMap<String, Collection<String>>();
             userInfo.put("userName", singleValue("tuser2"));
             userInfo.put("objectType", singleValue("user"));
-
             connector.execute("DeleteObject", Collections.unmodifiableMap(userInfo));
+
+            response = rest.executeGet("/repo/link?_queryFilter=" + queryFilter);
+            json = response.messageBody;
+            object = parser.parse(json).getAsJsonObject();
+            array = object.getAsJsonArray("result");
+            assertEquals(0, array.size());
+        } finally {
+            deleteManagedUser(rest, userId);
+        }
+    }
+
+    public void testValidateLink() throws IdMUnitException, UnsupportedEncodingException {
+        final RestClient rest = RestClient.init(TEST_SERVER, "8080", "openidm-admin", "openidm-admin", false);
+        final String userId = "tuser2_id";
+        final String userName = "tuser2";
+        final String linkType = "AD_managedUser";
+
+        deleteManagedUser(rest, userId);
+
+        try {
+            //create user
+            String createJson = "{\n" +
+                    "        \"userName\":\"" + userName + "\",\n" +
+                    "        \"givenName\":\"Test\",\n" +
+                    "        \"sn\":\"User\",\n" +
+                    "        \"mail\":\"tuser@example.com\",\n" +
+                    "        \"telephoneNumber\":\"555-555-1212\",\n" +
+                    "        \"password\":\"T3stPassw0rd\",\n" +
+                    "        \"description\":\"My user to validate\",\n" +
+                    "        \"_id\":\"" + userId + "\"\n" +
+                    "        \n" +
+                    "    }";
+            rest.executePost("/managed/user?_action=create", createJson);
+
+            //create link
+            createJson = "{\n" +
+                    "    \"_rev\":\"0\",\n" +
+                    "    \"linkType\":\"" + linkType + "\",\n" +
+                    "    \"linkQualifier\":\"default\",\n" +
+                    "    \"firstId\":\"" + userId + "\",\n" +
+                    "    \"secondId\":\"67890\"\n" +
+                    "}";
+            rest.executePost("/repo/link?_action=create", createJson);
+
+            Map<String, Collection<String>> validateAttrs = new HashMap<String, Collection<String>>();
+            validateAttrs.put("linkType", singleValue(linkType));
+            validateAttrs.put("objectType", singleValue("user"));
+            validateAttrs.put("userName", singleValue(userName));
+            connector.opValidateLink(Collections.unmodifiableMap(validateAttrs));
+        } finally {
+            deleteManagedUser(rest, userId);
+        }
+    }
+
+    public void testValidateLinkNoLink() throws IdMUnitException, UnsupportedEncodingException {
+        final RestClient rest = RestClient.init(TEST_SERVER, "8080", "openidm-admin", "openidm-admin", false);
+        final String userId = "tuser2_id";
+        final String userName = "tuser2";
+        final String linkType = "AD_managedUser";
+
+        deleteManagedUser(rest, userId);
+
+        try {
+            //create user
+            String createJson = "{\n" +
+                    "        \"userName\":\"" + userName + "\",\n" +
+                    "        \"givenName\":\"Test\",\n" +
+                    "        \"sn\":\"User\",\n" +
+                    "        \"mail\":\"tuser@example.com\",\n" +
+                    "        \"telephoneNumber\":\"555-555-1212\",\n" +
+                    "        \"password\":\"T3stPassw0rd\",\n" +
+                    "        \"description\":\"My user to validate\",\n" +
+                    "        \"_id\":\"" + userId + "\"\n" +
+                    "        \n" +
+                    "    }";
+            rest.executePost("/managed/user?_action=create", createJson);
+
+            Map<String, Collection<String>> validateAttrs = new HashMap<String, Collection<String>>();
+            validateAttrs.put("linkType", singleValue(linkType));
+            validateAttrs.put("objectType", singleValue("user"));
+            validateAttrs.put("userName", singleValue(userName));
+            try {
+                connector.opValidateLink(Collections.unmodifiableMap(validateAttrs));
+                fail("There should have been no matching links");
+            } catch (IdMUnitException e) {
+                assertTrue(e.getMessage().contains("No link"));
+            }
+        } finally {
+            deleteManagedUser(rest, userId);
+        }
+    }
+
+    public void testDeleteUserLeaveLinks() throws IdMUnitException, UnsupportedEncodingException {
+        final RestClient rest = RestClient.init(TEST_SERVER, "8080", "openidm-admin", "openidm-admin", false);
+        final String userId = "tuser2_id";
+        final JsonParser parser = new JsonParser();
+
+        deleteManagedUser(rest, userId);
+
+        try {
+            //create user
+            String createJson = "{\n" +
+                    "        \"userName\":\"tuser2\",\n" +
+                    "        \"givenName\":\"Test\",\n" +
+                    "        \"sn\":\"User\",\n" +
+                    "        \"mail\":\"tuser@example.com\",\n" +
+                    "        \"telephoneNumber\":\"555-555-1212\",\n" +
+                    "        \"password\":\"T3stPassw0rd\",\n" +
+                    "        \"description\":\"My user to validate\",\n" +
+                    "        \"_id\":\"" + userId + "\"\n" +
+                    "        \n" +
+                    "    }";
+            rest.executePost("/managed/user?_action=create", createJson);
+
+            //create links
+            createJson = "{\n" +
+                    "    \"_rev\":\"0\",\n" +
+                    "    \"linkType\":\"AD_managedUser\",\n" +
+                    "    \"linkQualifier\":\"default\",\n" +
+                    "    \"firstId\":\"" + userId + "\",\n" +
+                    "    \"secondId\":\"67890\"\n" +
+                    "}";
+            rest.executePost("/repo/link?_action=create", createJson);
+            createJson = "{\n" +
+                    "    \"_rev\":\"0\",\n" +
+                    "    \"linkType\":\"AD_managedUser\",\n" +
+                    "    \"linkQualifier\":\"default\",\n" +
+                    "    \"firstId\":\"67891\",\n" +
+                    "    \"secondId\":\"" + userId + "\"\n" +
+                    "}";
+            rest.executePost("/repo/link?_action=create", createJson);
+            createJson = "{\n" +
+                    "    \"_rev\":\"0\",\n" +
+                    "    \"linkType\":\"AD_managedUser\",\n" +
+                    "    \"linkQualifier\":\"default1\",\n" +
+                    "    \"firstId\":\"09876\",\n" +
+                    "    \"secondId\":\"" + userId + "\"\n" +
+                    "}";
+            rest.executePost("/repo/link?_action=create", createJson);
+
+            String queryFilter = URLEncoder.encode("firstId eq \"" + userId + "\" or secondId eq \"" + userId + "\"", "UTF-8");
+
+            RestClient.Response response = rest.executeGet("/repo/link?_queryFilter=" + queryFilter);
+            String json = response.messageBody;
+            JsonObject object = parser.parse(json).getAsJsonObject();
+            JsonArray array = object.getAsJsonArray("result");
+            assertEquals(3, array.size());
+
+            Map<String, Collection<String>> userInfo = new HashMap<String, Collection<String>>();
+            userInfo.put("userName", singleValue("tuser2"));
+            userInfo.put("objectType", singleValue("user"));
+            connector.opDeleteObjectLeaveLinks(Collections.unmodifiableMap(userInfo));
+
+            response = rest.executeGet("/repo/link?_queryFilter=" + queryFilter);
+            json = response.messageBody;
+            object = parser.parse(json).getAsJsonObject();
+            array = object.getAsJsonArray("result");
+            assertEquals(3, array.size());
+        } finally {
+            deleteManagedUser(rest, userId);
         }
     }
 
@@ -365,9 +583,8 @@ public class OpenIdmConnectorTests extends TestCase {
         try {
             connector.execute("ValidateObject", Collections.unmodifiableMap(userInfo));
         } catch (IdMUnitException e) {
-            if (!e.getMessage().contains("\"resultCount\":0")) {
-                throw e;
-            }
+            //the message may be version-dependent
+            assertTrue(e.getMessage().toLowerCase().contains("no objects returned") || e.getMessage().contains("\"resultCount\":0"));
         }
 
         connector.execute("DeleteObject", Collections.unmodifiableMap(userInfo));
