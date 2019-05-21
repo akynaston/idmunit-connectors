@@ -295,10 +295,17 @@ public class GoogleAppsConnector extends AbstractConnector {
         String suspended = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_SUSPENDED);
         String mustChangePassword = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_CHANGE_PASSWORD);
         String orgUnitPath = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_OU);
-        if (isBlank(orgUnitPath, false)) {
-            //both ou and orgUnitPath map to the Google attribute orgUnitPath in this connector; maintain order for
-            // backward compatibility
+        if (isBlank(orgUnitPath)) {
+            //Note: both "ou "and "orgUnitPath" map to the Google attribute orgUnitPath in this connector; maintain
+            // lookup order for backward compatibility
             orgUnitPath = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_ORG_UNIT_PATH);
+            if (!isBlank(orgUnitPath)) {
+                //Note: "ou" to be the original attribute name based upon existing tests even thought it's called
+                // "orgUnitPath" in Google
+                //TODO: Remove "orgUnitPath"
+                log.warn("WARN: Attribute [" + User.Schema.ATTR_ORG_UNIT_PATH + "] will be deprecated in favor of [" +
+                        User.Schema.ATTR_OU + "] in a future release");
+            }
         }
         String orgName = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_ORG_NAME);
         String orgTitle = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_ORG_TITLE);

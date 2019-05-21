@@ -636,7 +636,7 @@ public class TestClassUserGroup extends TestCase {
     public void testValidateNoValue() throws IdMUnitException {
 
         //NOTE: users are created without phonenumbers
-        Map<String, Collection<String>> dataCopy = new HashMap<String, Collection<String>>(data);
+        Map<String, Collection<String>> dataCopy = new HashMap<>(data);
         conn.opCreateObject(dataCopy);
 
         User user = UserApi.getUser(conn.getRestClient(), USER_NAME);
@@ -755,6 +755,14 @@ public class TestClassUserGroup extends TestCase {
         map.remove(Group.Schema.ATTR_GROUP_EMAIL);
         map.remove(Group.Schema.ATTR_GROUP_NAME);
         map.remove(Group.Schema.ATTR_GROUP_ROLE);
+
+        //Note: might take a few seconds to get the correct value back
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            //ignore
+        }
+
         conn.opValidateObject(map);
     }
 
