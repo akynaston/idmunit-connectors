@@ -66,6 +66,26 @@ public abstract class MailTemplateTestBase extends TestCase {
     boolean deliveryPause = false; // used for the imap tests where we deliver email and need to wait for it to appear.
     long pauseDuration = 15 * 1000;
 
+    public String getBody() {
+        return "<html>\r\n" +
+                "<head>\r\n" +
+                "  <title>Notice of Password Reset Failure</title>\r\n" +
+                "  <style> <!-- body { font-family: Trebuchet MS } --> </style>\r\n" +
+                "</head>\r\n" +
+                "<body BGCOLOR=\"#FFFFFF\">\r\n" +
+                "  <p>Dear " + "$UserFullName$" + ",</p>\r\n" +
+                "  <p>This is a notice that your password could not be reset in the " + "$ConnectedSystemName$" + " system..  The reason for failure is indicated below:</p>\r\n" +
+                "  <p>Reason: " + "$FailureReason$" + "</p>\r\n" +
+                "  <p>If you have any further questions,\r\n" +
+                "     please contact the help desk at (012) 345-6789 or email\r\n" +
+                "     at <a href=\"mailto:help.desk@mycompany.com\">\r\n" +
+                "     help.desk@mycompany.com </a></p>\r\n" +
+                "  <p> - Automated Security</p>\r\n" +
+                "  <p><img ALT=\"Powered by Novell\" SRC=\"cid:powered_by_novell.gif\" height=\"29\" width=\"80\"/></p>\r\n" +
+                "</body>\r\n" +
+                "</html>";
+    }
+
     public String getBody(String userFullName,
                           String userGivenName,
                           String userLastName,
@@ -197,6 +217,30 @@ public abstract class MailTemplateTestBase extends TestCase {
         }
     }
 
+    public void testValidateTemplateNoTokens() throws IdMUnitException {
+        final String subject = "Notice of Password Reset Failure";
+        final String body = getBody();
+
+        try {
+            sendMessage(
+                    defaultRecipient,
+                    defaultSender,
+                    subject,
+                    body);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            fail("Unexpected exception: " + e);
+        }
+
+        Map<String, Collection<String>> data = new TreeMap<String, Collection<String>>(String.CASE_INSENSITIVE_ORDER);
+
+        addSingleValue(data, "To", defaultRecipient);
+        addSingleValue(data, "Subject", subject);
+        addSingleValue(data, "Template", ConfigTests.DEFAULT_LDAP_TEMPLATE_DN);
+
+        mailConnector.execute("Validate", data);
+    }
+
     public void testSendFailure() throws IdMUnitException {
         // Leftover messagess from prior test runs can cause the error message to change
         mailConnector.execute("DeleteMail", Collections.<String, Collection<String>>emptyMap());
@@ -260,26 +304,19 @@ public abstract class MailTemplateTestBase extends TestCase {
                             "but was:  []\n" +
                             "\n" +
                             "Email pieces were not equal for: [Template]\n" +
-                            "Key:      [ConnectedSystemName]\n" +
-                            "Value:    [TrivirBad]\n" +
-                            "Template: [This is a notice that your password could not be reset in the $ConnectedSystemName$ system..  The reason for failure is indicated below:]\n" +
-                            "Expected: [This is a notice that your password could not be reset in the TrivirBad system..  The reason for failure is indicated below:]\n" +
-                            "Actual:   [This is a notice that your password could not be reset in the Trivir system..  The reason for failure is indicated below:]\n" +
-                            "\n" +
-                            "Email pieces were not equal for: [Template]\n" +
-                            "Key:      [UserFullName]\n" +
-                            "Value:    [Fred FlintstoneBad]\n" +
                             "Template: [Dear $UserFullName$,]\n" +
                             "Expected: [Dear Fred FlintstoneBad,]\n" +
                             "Actual:   [Dear Fred Flintstone,]\n" +
                             "\n" +
                             "Email pieces were not equal for: [Template]\n" +
-                            "Key:      [FailureReason]\n" +
-                            "Value:    [PersonalBad]\n" +
+                            "Template: [This is a notice that your password could not be reset in the $ConnectedSystemName$ system..  The reason for failure is indicated below:]\n" +
+                            "Expected: [This is a notice that your password could not be reset in the TrivirBad system..  The reason for failure is indicated below:]\n" +
+                            "Actual:   [This is a notice that your password could not be reset in the Trivir system..  The reason for failure is indicated below:]\n" +
+                            "\n" +
+                            "Email pieces were not equal for: [Template]\n" +
                             "Template: [Reason: $FailureReason$]\n" +
                             "Expected: [Reason: PersonalBad]\n" +
-                            "Actual:   [Reason: Personal]\n" +
-                            "\n";
+                            "Actual:   [Reason: Personal]\n\n";
 
             assertEquals(expectedError, e.getMessage());
         }
