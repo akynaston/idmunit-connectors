@@ -28,6 +28,7 @@
 
 package com.trivir.idmunit.connector.util;
 
+import com.trivir.idmunit.connector.GoogleAppsConnector;
 import com.trivir.idmunit.connector.api.resource.Alias;
 import com.trivir.idmunit.connector.api.resource.SendAs;
 import com.trivir.idmunit.connector.api.resource.SmtpMsa;
@@ -35,6 +36,8 @@ import com.trivir.idmunit.connector.api.resource.User;
 import org.idmunit.IdMUnitException;
 import org.idmunit.IdMUnitFailureException;
 import org.idmunit.connector.ConnectorUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -45,6 +48,8 @@ import static com.trivir.idmunit.connector.api.resource.SmtpMsa.Schema.*;
 import static com.trivir.idmunit.connector.util.JavaUtil.*;
 
 public class EntityConverter {
+
+    private static Logger log = LoggerFactory.getLogger(EntityConverter.class);
 
     public static Alias mapToAlias(Map<String, Collection<String>> data) throws IdMUnitException {
         if (isNullOrEmpty(data)) {
@@ -83,7 +88,22 @@ public class EntityConverter {
         String givenName = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_GIVEN_NAME);
         String familyName = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_FAMILY_NAME);
         String password = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_PASSWORD);
-        String orgUnitPath = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_ORG_UNIT_PATH);
+        String orgUnitPath = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_OU);
+        if (isBlank(orgUnitPath)) {
+            //Note: both "ou" and "orgUnitPath" map to the Google attribute orgUnitPath in this connector; unfortunately,
+            // the lookup order was the opposite of method modifyUser: "orgUnitPath" then "ou"; reversed lookup order for
+            // consistency
+            orgUnitPath =  ConnectorUtil.getSingleValue(data, User.Schema.ATTR_ORG_UNIT_PATH);
+            if (!isBlank(orgUnitPath)) {
+                //Note: "ou" seems to be the original attribute name based upon existing tests even thought it's called
+                // "orgUnitPath" in Google
+                //TODO: Remove "orgUnitPath"
+                log.warn("WARN: Attribute [" + User.Schema.ATTR_ORG_UNIT_PATH + "] will be deprecated in favor of [" +
+                        User.Schema.ATTR_OU + "] in a future release");
+            }
+
+        }
+
         String strIncludeInGlobalAddressList = ConnectorUtil.getSingleValue(data, User.Schema.ATTR_INCLUDE_IN_GLOBAL_ADDRESS_LIST);
         Boolean includeInGlobalAddressList = null;
         if (!isBlank(strIncludeInGlobalAddressList)) {
@@ -427,7 +447,10 @@ public class EntityConverter {
             //userAttrs.put(ATTR_EMPLOYEE_ID, new ArrayList(){{add(employeeId);}});
         }
         if (!isBlank(ou)) {
+            //temporarily allow validation on either attribute name
             userAttrs.put(User.Schema.ATTR_OU, Collections.singletonList(ou));
+            //TODO: Remove "orgUnitPath"
+            userAttrs.put(User.Schema.ATTR_ORG_UNIT_PATH, Collections.singletonList(ou));
         }
 
         return userAttrs;

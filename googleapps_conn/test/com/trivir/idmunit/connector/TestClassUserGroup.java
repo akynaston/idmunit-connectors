@@ -444,8 +444,13 @@ public class TestClassUserGroup extends TestCase {
         assertNull(user.getMobilePhone());
     }
 
+    //BUG: This feature used to work, but as of 20190225 it's broken; I think it has to do with Google's newer multi-phase
+    // authentication approach: 1) select "Use another acccount" on the first page, 2) enter the username on the second,
+    // 3) then the password on the third. It may make more sense to record and replay this interaction than try to
+    // script it in Java, especially now that the form isn't part of the base HTML page
     public void testValidateUserPasswordSuccess() throws IdMUnitException {
         conn.opCreateObject(data);
+
         User user = UserApi.getUser(conn.getRestClient(), USER_NAME);                //We have to run getUser before validating password.
         assertTrue(user.getGivenName().equals(GIVEN_NAME));
         assertTrue(user.getFamilyName().equals(FAMILY_NAME));
@@ -636,8 +641,7 @@ public class TestClassUserGroup extends TestCase {
 
         User user = UserApi.getUser(conn.getRestClient(), USER_NAME);
 
-        Map<String, Collection<String>> map = new HashMap<String, Collection<String>>();
-        map = EntityConverter.userToMap(user);
+        Map<String, Collection<String>> map = EntityConverter.userToMap(user);
         map.put(SYNTHETIC_ATTR_OBJECT_CLASS, Arrays.asList(User.Schema.CLASS_NAME));
         map.put(User.Schema.ATTR_USERNAME, Arrays.asList(USER_NAME));
         map.put(User.Schema.ATTR_PHONE_WORK, Arrays.asList(GoogleAppsConnector.EMPTY_VAL));
@@ -738,6 +742,46 @@ public class TestClassUserGroup extends TestCase {
         conn.opDeleteObject(map);
     }
 
+    public void testCreateAndValidateUserWithOrgUnitPath() throws IdMUnitException {
+
+        Map<String, Collection<String>> map = new HashMap<String, Collection<String>>(data);
+
+        //same as ou
+        map.put(User.Schema.ATTR_ORG_UNIT_PATH, Collections.singletonList("/"));
+        conn.opCreateObject(map);
+
+        map.remove(User.Schema.ATTR_PASSWORD);
+        map.remove(Group.Schema.ATTR_GROUP_DESCRIPTION);
+        map.remove(Group.Schema.ATTR_GROUP_EMAIL);
+        map.remove(Group.Schema.ATTR_GROUP_NAME);
+        map.remove(Group.Schema.ATTR_GROUP_ROLE);
+
+        //Note: might take a few seconds to get the correct value back
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            //ignore
+        }
+
+        conn.opValidateObject(map);
+    }
+
+    public void testCreateAndValidateUserWithOu() throws IdMUnitException {
+
+        Map<String, Collection<String>> map = new HashMap<String, Collection<String>>(data);
+
+        //same as orgUnitPath
+        map.put(User.Schema.ATTR_OU, Collections.singletonList("/"));
+        conn.opCreateObject(map);
+
+        map.remove(User.Schema.ATTR_PASSWORD);
+        map.remove(Group.Schema.ATTR_GROUP_DESCRIPTION);
+        map.remove(Group.Schema.ATTR_GROUP_EMAIL);
+        map.remove(Group.Schema.ATTR_GROUP_NAME);
+        map.remove(Group.Schema.ATTR_GROUP_ROLE);
+        conn.opValidateObject(map);
+    }
+
     //TODO: validate simple User and complex User
     public void testValidateUser() throws IdMUnitException {
 
@@ -790,7 +834,7 @@ public class TestClassUserGroup extends TestCase {
 
         conn.opCreateObject(map);
         //check for non-value
-        map.put(User.Schema.ATTR_ORG_UNIT_PATH, Arrays.asList(GoogleAppsConnector.EMPTY_VAL));
+        map.put(User.Schema.ATTR_PHONE_WORK, Arrays.asList(GoogleAppsConnector.EMPTY_VAL));
         //password isn't returned; user validator doesn't check group attributes
         map.remove(User.Schema.ATTR_PASSWORD);
         map.remove(Group.Schema.ATTR_GROUP_DESCRIPTION);

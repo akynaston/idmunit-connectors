@@ -56,6 +56,32 @@ public class TestConnectorSetup extends TestCase {
     private static final String SERVICE_EMAIL_4 = "no-api-enabled@shim-and-conn-test-no-api.iam.gserviceaccount.com";
     private static final String PRIVATE_KEY_4 = "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDhp1GsuntPtfNW\nus4clfT8mw3WFaUAvth9Sj4f2LZD3gIRmGL11WDoUE28S8Oa/vpxXDu7o3y8opsf\nJ3jnrb2Jrfc+wpYGSle0NK6C2b9fPZ6VVeiewLWhsUom2rkx/BflOUG41MPf0GUi\nT4ZyNIibLDc2fg6aol2LvKxEr8o0r9+FIqhWyNV+oqSRlCMMUI8/ATKbKGMlb8g9\npUiwgRpOZJltNQu6u4R8AA3vCkYHZrfdfII8aNsv7HzoxVKyrcIAuIkMd7tl8Pib\nL2uOADiIzrLsXto6lByQmYSQgBccNWVpkhjcjt0PhTTGlUbwPA9g4yHDCMWTPUW1\nk8e1FhAzAgMBAAECggEADobR+DetFo2VE8FE4Yw50EU/F8ge7jRbBX3REAXIfgf9\nxBo2TLMm4O3Cg1uxRPojL0cLxWGZ9x7Us6W739ZMfF+Jqi2msNL6YGx/y4avDjeO\nTPjR1956EuWx61xrTa937lbIR1jTH0ZwLExIUHPXU33+M/DbidLoCMXlpSpX7xpA\naV7wK2bFULEH62cn/v7XTf3qZIyxmkv76NtWswIkZ7KS1JGhC3v6s8eIIRq4HWxm\nOsStxJdJD9UApOWZe5D1LVUUYgwdOfHBbNzebOoG1XmpD6Wp5+jSpO7HpQyeJdX2\n+K2LX7SnaZt5DNCAy0zCVhYuKp4mj3mM8XA9Sk+4yQKBgQD3ChJCfQsy9oNRJfEr\n1nPrTs7wanQ5OXzo2CGOskzhohSI51NiByqYbNy67vtNazGLQ1Y8MW27q/LAAFDG\nA10BzPyaekB+TGtEiLRt8XvLIasyR0j9oUH508x3zNItCC0E9oFADTZqVZYLVi2J\nKE1MP0h8ILpe+hMXW12ujATNFwKBgQDp1qqbtj9xLCyjTpE5N/7YMStB289mHV2X\nr1gvzvIOsZfQf8ksJunNy6Zk3JI0P3XwRzVZkJclowno914D2Jw/6VPTcMCJPzRP\n2wDEllyEP3xseyx2BLy2kExgsTekJlnB63roobbLivn7uzAAieLkNcdKYv/+f248\nfbJiD9MfRQKBgC5GIK17psFhE6/7n3VKsmP9Wx4Fkse1UQR8l6yXEXeiWJ5cVm4i\nUYRDwAT0Bva1gY5Iirqzt45T4yC77mVo898Gerqk87e0sNMhmEqP1VRzdhHw8Gcx\n8Z3OYpp+L1BoG6a2VfedgffhGD3/YoAyoGgL4pP9vWtVBIZ3gtDTQYL5AoGBAOis\n5Gg6KNh4pxX8KH6x3A/MpQlMKgumrqkvHWW82piKV9BsRoV7VuuidzgnTgdVGgpz\nIH+1YuBdYZABC/hxwc/KYNGkgMBQNsI63YG/R+GDtk/PJEduoURbQtR3ojDgxDE0\nGcF+n//akrHL6ZCvoyeG5316EtVugQcJ38S5kE6tAoGBAL+Y+YH0cUBkgB7kiuox\nauIZZnm2mi4txGerKj0YXMpDgFfZlQ0PlCNcXsGIZWqSEkkR1Q2uigvO0oYx0Y/d\nBHGLLen2cOHiAfaX5QldAPbGLqUxTKFGjxbpwxijP2QanLN7hMfGof8Au3MCsZNj\nlyd72qpst6BQG+ryCCkNY0Md\n-----END PRIVATE KEY-----\n";
 
+    private static String normalizeMsg(String msg, boolean removePunctuation) {
+        if (null == msg) {
+            return "";
+        }
+
+        if (removePunctuation) {
+            msg = msg.replaceAll("\\p{P}", " ");
+        }
+
+        //make whitespace-insensitive
+        msg = msg.replaceAll("\\s{2,}", " ");
+        //remove newline characters
+        msg = msg.replaceAll("\\r?\\n|\\r", "");
+
+        //remove preceding and trailing whitespace
+        msg = msg.trim();
+
+        //make case-insensitive
+        msg = msg.toLowerCase();
+        return msg;
+    }
+
+    private static String normalizeMsg(String msg) {
+        return normalizeMsg(msg, true);
+    }
+
 /*    public void testAuthTokenExpiration() throws IdMUnitException {
 
         GoogleAppsConnector conn = TestUtil.newTestConnection(ADMIN_EMAIL, AliasApi.SCOPES);
@@ -177,21 +203,36 @@ public class TestConnectorSetup extends TestCase {
     }*/
 
     public void testAuthenticationWithBadServiceEmail() {
+        final String email = "foo@idmunit.org";
+
         GoogleAppsConnector conn = new GoogleAppsConnector();
         Map<String, String> config = new HashMap<String, String>();
 
         config.put(CONFIG_SUPER_USER_EMAIL, SUPER_USER);
-        config.put(CONFIG_SERVICE_ACCOUNT_EMAIL, "foo@idmunit.org");
+        config.put(CONFIG_SERVICE_ACCOUNT_EMAIL, email);
         config.put(CONFIG_PRIVATE_KEY, PRIVATE_KEY_1);
 
         try {
             conn.setup(config);
             fail("Expected an exception to be thrown");
         } catch (IdMUnitException e) {
-            assertEquals("Error retrieving authentication token", e.getMessage());
-            assertEquals("Unable to authenticate with 'foo@idmunit.org' and the private key supplied.", e.getCause().getMessage());
-            assertEquals("Unauthorized(401): {\n" + " \"error\": \"invalid_client\",\n" + " \"error_description\": \"The OAuth client was not found.\"\n" + "}\n", e.getCause().getCause().getMessage());
-            //assertEquals("Bad Request(400): {\n" + " \"error\": \"invalid_grant\",\n" + " \"error_description\": \"Bad Request\"\n" + "}\n", e.getCause().getCause().getMessage());
+            assertEquals("error retrieving authentication token", normalizeMsg(e.getMessage()));
+            String expected= String.format("unable to authenticate with '%s' and the private key supplied.", email);
+            assertEquals(expected, normalizeMsg(e.getCause().getMessage(), false));
+
+            String causeCauseMsg = normalizeMsg(e.getCause().getCause().getMessage(), false);
+            assertTrue(causeCauseMsg.contains("400"));
+            assertTrue(causeCauseMsg.contains("bad request"));
+            assertTrue(causeCauseMsg.contains("invalid_grant"));
+            assertTrue(causeCauseMsg.contains("email or user id"));
+
+//actual cause cuase message
+/*
+Bad Request(400): {
+  "error": "invalid_grant",
+  "error_description": "Not a valid email or user ID."
+}
+ */
         }
     }
 
@@ -207,12 +248,23 @@ public class TestConnectorSetup extends TestCase {
             conn.setup(config);
             fail("expected an exception to be thrown");
         } catch (IdMUnitException e) {
-            assertEquals("Error retrieving authentication token", e.getMessage());
-            //NOTE: Google's error messages became much more general and less helpful
-            // e.g., this test now returns "Unable to authenticate for an unknown reason."
-            assertTrue(e.getCause().getMessage().toLowerCase().contains("unable to authenticate"));
-            //assertEquals("Unable to authenticate, possible problem with the subject 'foo@idmunit.org'", e.getCause().getMessage());
-            assertEquals("Bad Request(400): {\n" + " \"error\": \"invalid_grant\",\n" + " \"error_description\": \"Invalid email or User ID\"\n" + "}\n", e.getCause().getCause().getMessage());
+            assertEquals("error retrieving authentication token", normalizeMsg(e.getMessage()));
+            assertEquals("unable to authenticate for an unknown reason", normalizeMsg(e.getCause().getMessage()));
+
+            String causeCauseMsg = normalizeMsg(e.getCause().getCause().getMessage(), false);
+            assertTrue(causeCauseMsg.contains("400"));
+            assertTrue(causeCauseMsg.contains("bad request"));
+            assertTrue(causeCauseMsg.contains("invalid_grant"));
+            assertTrue(causeCauseMsg.contains("email or user id"));
+
+//actual cause cuase message
+/*
+Bad Request(400): {
+  "error": "invalid_grant",
+  "error_description": "Invalid email or User ID"
+}
+ */
+
         }
     }
 
@@ -228,11 +280,22 @@ public class TestConnectorSetup extends TestCase {
             conn.setup(config);
             fail("expected an exception to be thrown");
         } catch (IdMUnitException e) {
-            assertEquals("Error retrieving authentication token", e.getMessage());
-            //NOTE: Google's error messages became much more general and less helpful
-            // e.g., this test now returns "Unable to authenticate for an unknown reason."
-            assertTrue(e.getCause().getMessage().toLowerCase().contains("unable to authenticate"));
-            //assertEquals("Unable to authenticate, the following scopes are not authorized for the service account 'https://www.googleapis.com/auth/apps.licensing'", e.getCause().getMessage());
+            assertEquals("error retrieving authentication token", normalizeMsg(e.getMessage()));
+            assertEquals("unable to authenticate for an unknown reason", normalizeMsg(e.getCause().getMessage()));
+
+            String causeCauseMsg = normalizeMsg(e.getCause().getCause().getMessage(), false);
+            assertTrue(causeCauseMsg.contains("401"));
+            assertTrue(causeCauseMsg.contains("unauthorized_client"));
+            assertTrue(causeCauseMsg.contains("unauthorized"));
+
+//actual cause cuase message
+/*
+Unauthorized(401): {
+  "error": "unauthorized_client",
+  "error_description": "Client is unauthorized to retrieve access tokens using this method, or client not authorized for any of the scopes requested."
+}
+ */
+
         }
     }
 
@@ -248,14 +311,22 @@ public class TestConnectorSetup extends TestCase {
             conn.setup(config);
             fail("expected an exception to be thrown");
         } catch (IdMUnitException e) {
-            assertEquals("Error retrieving authentication token", e.getMessage());
-            //NOTE: Google's error messages became much more general and less helpful
-            // e.g., this test now returns "Unable to authenticate for an unknown reason."
-            assertTrue(e.getCause().getMessage().toLowerCase().contains("unable to authenticate"));
-            //assertEquals("Unable to authenticate because Domain Wide Delegation is not enabled or the service account client ID is not authorized for any scopes", e.getCause().getMessage());
+            assertEquals("error retrieving authentication token", normalizeMsg(e.getMessage()));
+            assertEquals("unable to authenticate for an unknown reason", normalizeMsg(e.getCause().getMessage()));
 
-            assertEquals("Unauthorized(401): {\n" + " \"error\": \"unauthorized_client\",\n" + " \"error_description\": \"Client is unauthorized to retrieve access tokens using this method.\"\n" + "}\n", e.getCause().getCause().getMessage());
-            //assertEquals("Unauthorized(401): {\n" + " \"error\": \"unauthorized_client\",\n" + " \"error_description\": \"Unauthorized client or scope in request.\"\n" + "}\n", e.getCause().getCause().getMessage());
+            String causeCauseMsg = normalizeMsg(e.getCause().getCause().getMessage(), false);
+            assertTrue(causeCauseMsg.contains("401"));
+            assertTrue(causeCauseMsg.contains("unauthorized"));
+            assertTrue(causeCauseMsg.contains("unauthorized_client"));
+
+//actual cause cause message
+/*
+Unauthorized(401): {
+  "error": "unauthorized_client",
+  "error_description": "Client is unauthorized to retrieve access tokens using this method, or client not authorized for any of the scopes requested."
+}
+ */
+
         }
     }
 
@@ -271,12 +342,9 @@ public class TestConnectorSetup extends TestCase {
             conn.setup(config);
             fail("expected an exception to be thrown");
         } catch (IdMUnitException e) {
-            String msg = e.getMessage();
-            Throwable cause = e.getCause();
-            assertNotNull(cause);
-            String causeMsg = cause.getMessage().toLowerCase();
+            assertEquals("error retrieving authentication token", normalizeMsg(e.getMessage()));
 
-            assertTrue("Error retrieving authentication token".equals(msg));
+            String causeMsg = normalizeMsg(e.getCause().getMessage(), false);
             assertTrue(causeMsg.contains("403"));
             assertTrue(causeMsg.contains("forbidden"));
             assertTrue(causeMsg.contains("accessnotconfigured"));
