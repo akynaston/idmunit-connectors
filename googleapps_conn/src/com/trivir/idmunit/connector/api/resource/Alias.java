@@ -63,58 +63,6 @@ public final class Alias implements Cloneable {
     public Alias() {
     }
 
-    //TODO: use general-purpose diff library instead
-    public static Map<String, List<Object>> diff(Alias a1, Alias a2) {
-        //NOTE:
-        // omitted userKey because it's a convenient placeholder and not part of the Alias object proper
-        // omitted kind, id, etag because they're Google housekeeping attributes
-
-        Map<String, List<Object>> diffs = new TreeMap<String, List<Object>>();
-
-        if (a1 == a2) {
-            //no difference
-            return diffs;
-        }
-
-        if (a1 == null) {
-            a2.normalize();
-            if (a2.getPrimaryEmail() != null) {
-                diffs.put(ATTR_PRIMARY_EMAIL, Arrays.asList(new Object[] {null, a2.getPrimaryEmail()}));
-            }
-            if (a2.getAlias() != null) {
-                diffs.put(ATTR_ALIAS, Arrays.asList(new Object[] {null, a2.getAlias()}));
-            }
-        } else if (a2 == null) {
-            a1.normalize();
-            if (a1.getPrimaryEmail() != null) {
-                diffs.put(ATTR_PRIMARY_EMAIL, Arrays.asList(new Object[] {a1.getPrimaryEmail(), null}));
-            }
-            if (a1.getAlias() != null) {
-                diffs.put(ATTR_ALIAS, Arrays.asList(new Object[] {a1.getAlias(), null}));
-            }
-        } else {
-            a1.normalize();
-            a2.normalize();
-
-            String s1;
-            String s2;
-
-            s1 = a1.getPrimaryEmail();
-            s2 = a2.getPrimaryEmail();
-            if (!ResourceUtil.areEqual(s1, s2, false, false)) {
-                diffs.put(ATTR_PRIMARY_EMAIL, Arrays.asList(new Object[] {s1, s2}));
-            }
-
-            s1 = a1.getAlias();
-            s2 = a2.getAlias();
-            if (!ResourceUtil.areEqual(s1, s2, false, false)) {
-                diffs.put(ATTR_ALIAS, Arrays.asList(new Object[] {s1, s2}));
-            }
-        }
-
-        return diffs;
-    }
-
     @Override
     public Object clone() throws CloneNotSupportedException {
         super.clone();

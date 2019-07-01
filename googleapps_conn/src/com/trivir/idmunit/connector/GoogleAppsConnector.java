@@ -717,9 +717,7 @@ public class GoogleAppsConnector extends AbstractConnector {
         handleValidationErrors(errors);
     }
 
-    //TODO: implement support for [EMPTY]
     private void validateAlias(Map<String, Collection<String>> srcMap) throws IdMUnitException {
-        final String msgAttrValidationFailed = "Validation failed: Attribute [%s] not equal. Expected dest value: [%s] Actual dest value(s): [%s]";
         final String msgAttrNotPopulated = "Error: %s attribute is empty and should be populated";
         final String msgResourceNotFound = "%s %s not found for %s";
 
@@ -738,30 +736,11 @@ public class GoogleAppsConnector extends AbstractConnector {
             throw new IdMUnitFailureException(String.format(msgResourceNotFound, Alias.Schema.CLASS_NAME, aliasEmail, userKey));
         }
 
-        //fitler out attributes from dest not in src before diffing
-        dest.setUserKey(userKey);
         Map<String, Collection<String>> destMap = EntityConverter.aliasToMap(dest);
-        Set<String> keyDiff = new HashSet<String>(destMap.keySet());
-        keyDiff.removeAll(srcMap.keySet());
-        destMap.keySet().removeAll(keyDiff);
-
-        ArrayList<String> errors = new ArrayList<String>();
-        Map<String, List<Object>> diff = Alias.diff(src, EntityConverter.mapToAlias(destMap));
-        for (Map.Entry<String, List<Object>> entry : diff.entrySet()) {
-            List<Object> values = entry.getValue();
-            errors.add(String.format(msgAttrValidationFailed,
-                    entry.getKey(),
-                    String.valueOf(values.get(0)),
-                    String.valueOf(values.get(1))));
-        }
-
-        handleValidationErrors(errors);
+        validateImpl(srcMap, destMap, Arrays.asList(Alias.Schema.ATTR_USERKEY, Alias.Schema.ATTR_ALIAS));
     }
 
-    //TODO: implement support for [EMPTY]
     private void validateSendAs(Map<String, Collection<String>> srcMap) throws IdMUnitException {
-        final String msgAttrValidationFailed = "Validation failed: Attribute [%s] not equal. Expected dest value: [%s] Actual dest value(s): [%s]";
-
         final String msgAttrNotPopulated = "Error: %s attribute is empty and should be populated";
         final String msgResourceNotFound = "%s %s not found for %s";
 
@@ -779,24 +758,8 @@ public class GoogleAppsConnector extends AbstractConnector {
             throw new IdMUnitFailureException(String.format(msgResourceNotFound, SendAs.Schema.CLASS_NAME, sendAsEmail, userId));
         }
 
-        //fitler out attributes from dest not in src before diffing
-        dest.setUserId(userId);
         Map<String, Collection<String>> destMap = EntityConverter.sendAsToMap(dest);
-        Set<String> keyDiff = new HashSet<String>(destMap.keySet());
-        keyDiff.removeAll(srcMap.keySet());
-        destMap.keySet().removeAll(keyDiff);
-
-        ArrayList<String> errors = new ArrayList<String>();
-        Map<String, List<Object>> diff = SendAs.diff(src, EntityConverter.mapToSendAs(destMap));
-        for (Map.Entry<String, List<Object>> entry : diff.entrySet()) {
-            List<Object> values = entry.getValue();
-            errors.add(String.format(msgAttrValidationFailed,
-                    entry.getKey(),
-                    String.valueOf(values.get(0)),
-                    String.valueOf(values.get(1))));
-        }
-
-        handleValidationErrors(errors);
+        validateImpl(srcMap, destMap, Arrays.asList(SendAs.Schema.ATTR_USERID, SendAs.Schema.ATTR_SEND_AS_EMAIL));
     }
 
     private static void handleValidationErrors(Collection<String> errors) throws IdMUnitException {
