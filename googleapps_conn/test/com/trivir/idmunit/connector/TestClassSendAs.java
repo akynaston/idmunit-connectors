@@ -31,6 +31,7 @@ package com.trivir.idmunit.connector;
 import com.trivir.idmunit.connector.api.AliasApi;
 import com.trivir.idmunit.connector.api.SendAsApi;
 import com.trivir.idmunit.connector.api.resource.SendAs;
+import com.trivir.idmunit.connector.api.resource.SmtpMsa;
 import com.trivir.idmunit.connector.rest.RestClient;
 import com.trivir.idmunit.connector.util.JWTUtil;
 import org.idmunit.IdMUnitException;
@@ -38,12 +39,11 @@ import org.junit.*;
 
 import java.security.PrivateKey;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.trivir.idmunit.connector.ConfigTests.*;
 import static com.trivir.idmunit.connector.GoogleAppsConnector.ADMIN_EMAIL;
+import static com.trivir.idmunit.connector.GoogleAppsConnector.SYNTHETIC_ATTR_OBJECT_CLASS;
 import static com.trivir.idmunit.connector.api.SendAsApi.*;
 import static com.trivir.idmunit.connector.util.EntityConverter.sendAsToMap;
 import static com.trivir.idmunit.connector.util.TestUtil.*;
@@ -66,7 +66,6 @@ public class TestClassSendAs {
     }
 
     private static void createTestAliases(RestClient rest, String userId) throws IdMUnitException {
-
         //add test aliases
         for (int a = 0; a < TEST_NUM_ALIASES; a++) {
             String email = newUniqueEmailAddress(EMAIL_TEMPLATE);
@@ -122,7 +121,7 @@ public class TestClassSendAs {
     }
 
     @Before
-    public void setUp() throws IdMUnitException { }
+    public void setUp() { }
 
     @After
     public void tearDown() { }
@@ -140,10 +139,12 @@ public class TestClassSendAs {
         Map<String, Collection<String>> map = sendAsToMap(sendAs);
         gmail.opCreateObject(map);
 
-        List<String> sendAsEmails = listSendAsEmailOnly(gmail.getRestClient(), userId);
-        assertTrue(sendAsEmails.contains(email));
-
-        deleteObjectSuppressed(gmail, map);
+        try {
+            List<String> sendAsEmails = listSendAsEmailOnly(gmail.getRestClient(), userId);
+            assertTrue(sendAsEmails.contains(email));
+        } finally {
+            deleteObjectSuppressed(gmail, map);
+        }
     }
 
     @Test
@@ -169,11 +170,13 @@ public class TestClassSendAs {
         Map<String, Collection<String>> map = sendAsToMap(newSendAs);
         gmail.opCreateObject(map);
 
-        SendAs returnedSendAs = getSendAs(gmail.getRestClient(), userId, email);
-        assertNotNull(returnedSendAs);
-        assertTrue(newSendAs.equals(returnedSendAs));
-
-        deleteObjectSuppressed(gmail, map);
+        try {
+            SendAs returnedSendAs = getSendAs(gmail.getRestClient(), userId, email);
+            assertNotNull(returnedSendAs);
+            assertTrue(newSendAs.equals(returnedSendAs));
+        } finally {
+            deleteObjectSuppressed(gmail, map);
+        }
     }
 
     @Test
@@ -188,19 +191,24 @@ public class TestClassSendAs {
         SendAs sendAs = SendAs.Factory.newSendAs(userId, email);
         Map<String, Collection<String>> sendAsMap = sendAsToMap(sendAs);
         gmail.opCreateObject(sendAsMap);
-        assertTrue(listSendAsEmailOnly(gmail.getRestClient(), userId).contains(email));
 
-        //delete alias
-        gmail.opDeleteObject(sendAsMap);
+        try {
+            assertTrue(listSendAsEmailOnly(gmail.getRestClient(), userId).contains(email));
 
-        //NOTE: it can take some time for a delete to take effect
-        System.out.println(String.format(
-                "Waiting %d seconds for the delete to take effect...",
-                ConfigTests.TEST_WAIT_SECONDS_DELETE));
-        waitTimeSeconds(ConfigTests.TEST_WAIT_SECONDS_DELETE);
+            //delete alias
+            gmail.opDeleteObject(sendAsMap);
 
-        //verify
-        assertFalse(hasSendAs(gmail.getRestClient(), userId, email));
+            //NOTE: it can take some time for a delete to take effect
+            System.out.println(String.format(
+                    "Waiting %d seconds for the delete to take effect...",
+                    ConfigTests.TEST_WAIT_SECONDS_DELETE));
+            waitTimeSeconds(ConfigTests.TEST_WAIT_SECONDS_DELETE);
+
+            //verify
+            assertFalse(hasSendAs(gmail.getRestClient(), userId, email));
+        } finally {
+            deleteObjectSuppressed(gmail, sendAsMap);
+        }
     }
 
     @Test
@@ -214,24 +222,27 @@ public class TestClassSendAs {
         SendAs sendAs = SendAs.Factory.newSendAs(userId, email);
         Map<String, Collection<String>> sendAsMap = sendAsToMap(sendAs);
         gmail.opCreateObject(sendAsMap);
-//        gmail = newTestConnection(ADMIN_EMAIL, AliasApi.SCOPES);
-        PrivateKey key = null;
+
         try {
-            key = JWTUtil.pemStringToPrivateKey(ConfigTests.TEST_PRIVATE_KEY);
-        } catch (InvalidKeySpecException e) {
-            e.printStackTrace();
+            PrivateKey key = null;
+            try {
+                key = JWTUtil.pemStringToPrivateKey(ConfigTests.TEST_PRIVATE_KEY);
+            } catch (InvalidKeySpecException e) {
+                e.printStackTrace();
+            }
+
+            boolean hasSendAs = hasSendAs(ConfigTests.TEST_SERVICE_EMAIL, key, userId, sendAs);
+            assertTrue(hasSendAs);
+
+            gmail.opValidateObject(sendAsMap);
+        } finally {
+            //cleanup
+            deleteObjectSuppressed(gmail, sendAsMap);
         }
-
-        boolean hasSendAs = hasSendAs(ConfigTests.TEST_SERVICE_EMAIL, key, userId, sendAs);
-        assertTrue(hasSendAs);
-        gmail.opValidateObject(sendAsMap);
-
-        //cleanup
-        deleteObjectSuppressed(gmail, sendAsMap);
     }
 
     @Test
-    public void testValidateSendAs() throws IdMUnitException {
+    public void testValidateSendAsEmpty() throws IdMUnitException {
         final String userId = TEST_USERS[0];
 
         GoogleAppsConnector gmail = newTestConnection(userId, SendAsApi.SCOPES);
@@ -240,22 +251,40 @@ public class TestClassSendAs {
 
         SendAs sendAs = SendAs.Factory.newSendAs(
             userId,
-            "display",
+            null,
             email,
-            email,
-            "signature",
-            "accepted",
+            null,
+            null,
+            null,
             false,
             false,
             true,
             null);
         Map<String, Collection<String>> sendAsMap = sendAsToMap(sendAs);
         gmail.opCreateObject(sendAsMap);
-        assertTrue(hasSendAs(gmail.getRestClient(), userId, email));
-        gmail.opValidateObject(sendAsMap);
 
-        //cleanup
-        deleteObjectSuppressed(gmail, sendAsMap);
+        try {
+            assertTrue(hasSendAs(gmail.getRestClient(), userId, email));
+
+            Map<String, Collection<String>> sendAsValidateMap = new HashMap<>();
+            sendAsValidateMap.put(SYNTHETIC_ATTR_OBJECT_CLASS, Collections.singletonList(SendAs.Schema.CLASS_NAME));
+            sendAsValidateMap.put(SendAs.Schema.ATTR_USERID, Collections.singletonList(userId));
+            sendAsValidateMap.put(SendAs.Schema.ATTR_SEND_AS_EMAIL, Collections.singletonList(email));
+            sendAsValidateMap.put(SendAs.Schema.ATTR_DISPLAY_NAME, Collections.singletonList("[EMPTY]"));
+            sendAsValidateMap.put(SendAs.Schema.ATTR_REPLY_TO_ADDRESS, Collections.singletonList("[EMPTY]"));
+            sendAsValidateMap.put(SendAs.Schema.ATTR_SIGNATURE, Collections.singletonList("[EMPTY]"));
+            sendAsValidateMap.put(SendAs.Schema.ATTR_VERIFICATION_STATUS, Collections.singletonList("accepted"));
+            sendAsValidateMap.put(SmtpMsa.Schema.ATTR_HOST, Collections.singletonList("[EMPTY]"));
+            sendAsValidateMap.put(SmtpMsa.Schema.ATTR_PORT, Collections.singletonList("[EMPTY]"));
+            sendAsValidateMap.put(SmtpMsa.Schema.ATTR_PASSWORD, Collections.singletonList("[EMPTY]"));
+            sendAsValidateMap.put(SmtpMsa.Schema.ATTR_SECURITY_MODE, Collections.singletonList("[EMPTY]"));
+            sendAsValidateMap.put(SmtpMsa.Schema.ATTR_USERNAME, Collections.singletonList("[EMPTY]"));
+
+            gmail.opValidateObject(sendAsValidateMap);
+        } finally {
+            //cleanup
+            deleteObjectSuppressed(gmail, sendAsMap);
+        }
     }
 
     @Test
@@ -279,27 +308,27 @@ public class TestClassSendAs {
             null);
         Map<String, Collection<String>> sendAsMap = sendAsToMap(sendAs);
         gmail.opCreateObject(sendAsMap);
-        assertTrue(hasSendAs(gmail.getRestClient(), userId, email));
-
-        sendAs.setDisplayName("different display");
-        sendAs.setSignature("different signature");
-        sendAs.setTreatAsAlias(false);
-        sendAs.setReplyToAddress("different-reply-to@idmunit.org");
 
         try {
+            assertTrue(hasSendAs(gmail.getRestClient(), userId, email));
+
+            sendAs.setDisplayName("different display");
+            sendAs.setSignature("different signature");
+            sendAs.setTreatAsAlias(false);
+            sendAs.setReplyToAddress("different-reply-to@idmunit.org");
+
             gmail.opValidateObject(sendAsToMap(sendAs));
         } catch (IdMUnitException e) {
             String msg = e.getMessage().toLowerCase();
             if (!(msg.contains("validation failed") &&
-                msg.contains("displayname") &&
-                msg.contains("signature") &&
-                msg.contains("replytoaddress") &&
-                msg.contains("treatasalias") &&
+                msg.contains(SendAs.Schema.ATTR_DISPLAY_NAME.toLowerCase()) &&
+                msg.contains(SendAs.Schema.ATTR_SIGNATURE.toLowerCase()) &&
+                msg.contains(SendAs.Schema.ATTR_REPLY_TO_ADDRESS.toLowerCase()) &&
+                msg.contains(SendAs.Schema.ATTR_TREAT_AS_ALIAS.toLowerCase()) &&
                 msg.contains("[4] error(s) found"))) {
                 fail();
             }
         } finally {
-            //cleanup
             //cleanup
             deleteObjectSuppressed(gmail, sendAsMap);
         }

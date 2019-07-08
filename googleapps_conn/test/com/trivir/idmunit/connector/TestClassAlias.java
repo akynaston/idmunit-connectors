@@ -93,10 +93,13 @@ public class TestClassAlias {
 
             //create alias
             admin.opCreateObject(map);
-            List<String> aliases = listAliasesEmailOnly(admin.getRestClient(), userKey);
-            assertTrue(aliases.contains(aliasEmail));
 
-            deleteObjectSuppressed(admin, map);
+            try {
+                List<String> aliases = listAliasesEmailOnly(admin.getRestClient(), userKey);
+                assertTrue(aliases.contains(aliasEmail));
+            } finally {
+                deleteObjectSuppressed(admin, map);
+            }
         }
     }
 
@@ -110,11 +113,14 @@ public class TestClassAlias {
         Alias alias = Alias.Factory.newAlias(userKey, aliasEmail);
         Map<String, Collection<String>> map = aliasToMap(alias);
         admin.opCreateObject(map);
-        assertTrue(hasAlias(admin.getRestClient(), userKey, aliasEmail));
-        admin.opValidateObject(map);
 
-        //deleteTestUsers
-        deleteObjectSuppressed(admin, map);
+        try {
+            assertTrue(hasAlias(admin.getRestClient(), userKey, aliasEmail));
+            admin.opValidateObject(map);
+        } finally {
+            //cleanup
+            deleteObjectSuppressed(admin, map);
+        }
     }
 
     @Test
@@ -127,11 +133,14 @@ public class TestClassAlias {
         Alias alias = Alias.Factory.newAlias(userKey, aliasEmail, userKey);
         Map<String, Collection<String>> map = aliasToMap(alias);
         admin.opCreateObject(map);
-        assertTrue(hasAlias(admin.getRestClient(), userKey, aliasEmail));
-        admin.opValidateObject(map);
 
-        //deleteTestUsers
-        deleteObjectSuppressed(admin, map);
+        try {
+            assertTrue(hasAlias(admin.getRestClient(), userKey, aliasEmail));
+            admin.opValidateObject(map);
+        } finally {
+            //cleanup
+            deleteObjectSuppressed(admin, map);
+        }
     }
 
     @Test
@@ -144,22 +153,27 @@ public class TestClassAlias {
         Alias alias = Alias.Factory.newAlias(userKey, aliasEmail, userKey);
         Map<String, Collection<String>> map = aliasToMap(alias);
         admin.opCreateObject(map);
-        assertTrue(hasAlias(admin.getRestClient(), userKey, aliasEmail));
 
-        alias.setPrimaryEmail("different-primary@idmunit.org");
         try {
+            assertTrue(hasAlias(admin.getRestClient(), userKey, aliasEmail));
+            alias.setPrimaryEmail("different-primary@idmunit.org");
             admin.opValidateObject(aliasToMap(alias));
         } catch (IdMUnitException e) {
             String msg = e.getMessage().toLowerCase();
             if (!(msg.contains("validation failed") &&
-                msg.contains("primaryemail") &&
+                msg.contains(Alias.Schema.ATTR_PRIMARY_EMAIL.toLowerCase()) &&
                 msg.contains("[1] error(s) found"))) {
                 fail();
             }
         } finally {
-            //deleteTestUsers
+            //cleanup
             deleteObjectSuppressed(admin, map);
         }
+    }
+
+    @Test
+    public void testValidateAliasEmpty() {
+        //Note: can't test because primaryEmail defaults to userKey
     }
 
     @Test
