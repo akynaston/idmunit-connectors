@@ -217,7 +217,7 @@ public class TestConnectorSetup extends TestCase {
             fail("Expected an exception to be thrown");
         } catch (IdMUnitException e) {
             assertEquals("error retrieving authentication token", normalizeMsg(e.getMessage()));
-            String expected= String.format("unable to authenticate with '%s' and the private key supplied.", email);
+            String expected = String.format("unable to authenticate with '%s' and the private key supplied.", email);
             assertEquals(expected, normalizeMsg(e.getCause().getMessage(), false));
 
             String causeCauseMsg = normalizeMsg(e.getCause().getCause().getMessage(), false);

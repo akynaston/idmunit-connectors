@@ -36,7 +36,6 @@ import org.idmunit.IdMUnitFailureException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.sql.*;
-import java.sql.Statement;
 import java.util.*;
 
 public class OpenIdmConnectorTests extends TestCase {
@@ -48,6 +47,8 @@ public class OpenIdmConnectorTests extends TestCase {
     //private static final String TEST_SERVER= "172.17.2.30";
 
     private static final Map<String, String> CONFIG;
+
+    private OpenIdmConnector connector;
 
     static {
         CONFIG = new HashMap<String, String>();
@@ -65,7 +66,7 @@ public class OpenIdmConnectorTests extends TestCase {
         JsonObject object = parser.parse(json).getAsJsonObject();
         JsonArray array = object.getAsJsonArray("result");
         Iterator<JsonElement> iter = array.iterator();
-        while(iter.hasNext()) {
+        while (iter.hasNext()) {
             object = iter.next().getAsJsonObject();
             String id = object.getAsJsonPrimitive("_id").getAsString();
             String rev = object.getAsJsonPrimitive("_rev").getAsString();
@@ -78,8 +79,6 @@ public class OpenIdmConnectorTests extends TestCase {
             //ignore
         }
     }
-
-    private OpenIdmConnector connector;
 
     public void setUp() throws Exception {
         connector = new OpenIdmConnector();

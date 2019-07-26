@@ -28,7 +28,6 @@
 
 package com.trivir.idmunit.connector.util;
 
-import com.trivir.idmunit.connector.GoogleAppsConnector;
 import com.trivir.idmunit.connector.api.resource.Alias;
 import com.trivir.idmunit.connector.api.resource.SendAs;
 import com.trivir.idmunit.connector.api.resource.SmtpMsa;

@@ -28,15 +28,9 @@
 
 package com.trivir.idmunit.connector.api.resource;
 
-import com.trivir.idmunit.connector.api.resource.util.ResourceUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import static com.trivir.idmunit.connector.util.JavaUtil.checkNotBlank;
 

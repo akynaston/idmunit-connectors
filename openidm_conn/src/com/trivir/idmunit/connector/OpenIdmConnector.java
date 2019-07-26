@@ -424,7 +424,7 @@ public class OpenIdmConnector extends AbstractConnector {
                 throw new RuntimeException(e);
             }
 
-        String url = "/repo/link/?_queryFilter=" + queryFilter;
+            String url = "/repo/link/?_queryFilter=" + queryFilter;
 
             RestClient.Response response = rest.executeGet(url);
             JsonObject searchResults = new JsonParser().parse(response.messageBody).getAsJsonObject();
