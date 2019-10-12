@@ -1239,6 +1239,37 @@ public class OpenIdmConnectorTests extends TestCase {
         }
     }
 
+    public void testValidateStringAttribute() throws IdMUnitException {
+        RestClient rest = RestClient.init(TEST_SERVER, "8080", "openidm-admin", "openidm-admin", false);
+        String createAttrs = "{\n" +
+                "        \"givenName\":\"Test\",\n" +
+                "        \"sn\":\"User\",\n" +
+                "        \"mail\":\"tuser@example.com\",\n" +
+                "        \"telephoneNumber\":\"555-555-1212\",\n" +
+                "        \"description\":\"My user to patch\",\n" +
+                "        \"password\":\"T3stPassw0rd\",\n" +
+                "        \"_id\":\"tuserid\",\n" +
+                "        \"userName\":\"tuser13\",\n" +
+                "        \"objectType\":\"user\"\n" +
+                "        }";
+
+        rest.executePost("/managed/user?_action=create", createAttrs);
+
+        Map<String, Collection<String>> validateAttrs = new HashMap<>();
+        validateAttrs.put("_id", singleValue("bwayneid"));
+        validateAttrs.put("objectType", singleValue("user"));
+        validateAttrs.put("attrString::string", singleValue("A String ValueShouldFail"));
+
+        try {
+            connector.opValidateObject(validateAttrs);
+            fail("Test Should have failed! Provided validation value was incorrect!");
+        } catch (IdMUnitFailureException e) {
+            assertEquals("'.attrString' attribute mismatch: expected \"A String ValueShouldFail\" but was \"A String Value\"", e.getMessage().trim());
+        } finally {
+            rest.executeDelete("/managed/user/bwayneid");
+        }
+    }
+
     public void testRemoveSingleAttribute() throws IdMUnitException {
         RestClient rest = RestClient.init(TEST_SERVER, "8080", "openidm-admin", "openidm-admin", false);
         /*

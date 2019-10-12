@@ -568,6 +568,8 @@ public class OpenIdmConnector extends AbstractConnector {
                             result.addProperty(attr[0], true);
                         } else if ("false".equals(value)) {
                             result.addProperty(attr[0], false);
+                        } else {
+                            result.addProperty(attr[0], value);
                         }
                     }
                 } else if (expectedAttrName.endsWith("[]")) {
