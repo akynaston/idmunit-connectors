@@ -347,7 +347,6 @@ public class OpenIdmConnectorTests extends TestCase {
 
             //create links
             createJson = "{\n" +
-                    "    \"_rev\":\"0\",\n" +
                     "    \"linkType\":\"AD_managedUser\",\n" +
                     "    \"linkQualifier\":\"default\",\n" +
                     "    \"firstId\":\"" + userId + "\",\n" +
@@ -355,7 +354,6 @@ public class OpenIdmConnectorTests extends TestCase {
                     "}";
             rest.executePost("/repo/link?_action=create", createJson);
             createJson = "{\n" +
-                    "    \"_rev\":\"0\",\n" +
                     "    \"linkType\":\"AD_managedUser\",\n" +
                     "    \"linkQualifier\":\"default\",\n" +
                     "    \"firstId\":\"67891\",\n" +
@@ -363,7 +361,6 @@ public class OpenIdmConnectorTests extends TestCase {
                     "}";
             rest.executePost("/repo/link?_action=create", createJson);
             createJson = "{\n" +
-                    "    \"_rev\":\"0\",\n" +
                     "    \"linkType\":\"AD_managedUser\",\n" +
                     "    \"linkQualifier\":\"default1\",\n" +
                     "    \"firstId\":\"09876\",\n" +
@@ -419,7 +416,6 @@ public class OpenIdmConnectorTests extends TestCase {
 
             //create link
             createJson = "{\n" +
-                    "    \"_rev\":\"0\",\n" +
                     "    \"linkType\":\"" + linkType + "\",\n" +
                     "    \"linkQualifier\":\"default\",\n" +
                     "    \"firstId\":\"" + userId + "\",\n" +
@@ -499,7 +495,6 @@ public class OpenIdmConnectorTests extends TestCase {
 
             //create links
             createJson = "{\n" +
-                    "    \"_rev\":\"0\",\n" +
                     "    \"linkType\":\"AD_managedUser\",\n" +
                     "    \"linkQualifier\":\"default\",\n" +
                     "    \"firstId\":\"" + userId + "\",\n" +
@@ -507,7 +502,6 @@ public class OpenIdmConnectorTests extends TestCase {
                     "}";
             rest.executePost("/repo/link?_action=create", createJson);
             createJson = "{\n" +
-                    "    \"_rev\":\"0\",\n" +
                     "    \"linkType\":\"AD_managedUser\",\n" +
                     "    \"linkQualifier\":\"default\",\n" +
                     "    \"firstId\":\"67891\",\n" +
@@ -515,7 +509,6 @@ public class OpenIdmConnectorTests extends TestCase {
                     "}";
             rest.executePost("/repo/link?_action=create", createJson);
             createJson = "{\n" +
-                    "    \"_rev\":\"0\",\n" +
                     "    \"linkType\":\"AD_managedUser\",\n" +
                     "    \"linkQualifier\":\"default1\",\n" +
                     "    \"firstId\":\"09876\",\n" +
@@ -652,7 +645,7 @@ public class OpenIdmConnectorTests extends TestCase {
             try {
                 connector.execute("ValidateObject", Collections.unmodifiableMap(attrs));
             } catch (IdMUnitFailureException e) {
-                assertEquals("'.authzRoles' attribute mismatch: expected item {\"_ref\":\"badValue\"} was not found in [{\"_ref\":\"repo/internal/role/openidm-authorized\",\"_refProperties\":},{\"_ref\":\"repo/internal/role/openidm-admin\",\"_refProperties\":}]", e.getMessage().replaceAll("\\{\"_id\":\"(.{36})\",\"_rev\":\"(\\d{1,})\"\\}", "").trim());
+                assertEquals("'.authzRoles' attribute mismatch: expected item {\"_ref\":\"badValue\"} was not found in [{\"_ref\":\"repo/internal/role/openidm-authorized\",\"_refProperties\":},{\"_ref\":\"repo/internal/role/openidm-admin\",\"_refProperties\":}]", e.getMessage().replaceAll("\"_refResourceCollection\":\"repo/internal/role\",\"_refResourceId\":\"openidm-\\w{1,}\\\",", "").replaceAll("\\{\"_id\":\"(.{36})\",\"_rev\":\"(\\w{1,})\"\\}", "").trim());
             }
         } finally {
             rest.executeDelete("/managed/user/tuser2_id");
@@ -692,7 +685,7 @@ public class OpenIdmConnectorTests extends TestCase {
 
         Map<String, Collection<String>> reconAttrs = new HashMap<String, Collection<String>>();
         reconAttrs.put("_id", singleValue(userId));
-        reconAttrs.put("mapping", singleValue("managedUser_systemXmlfileAccount"));
+        reconAttrs.put("mapping", singleValue("systemLdapAccount_managedUser"));
 
         try {
             rest.executePost("/managed/user?_action=create", createAttrs);
@@ -726,8 +719,7 @@ public class OpenIdmConnectorTests extends TestCase {
     }
      */
 
-    // TODO: Update test to work with the mapped system
-    public void testReconcileUserWithUsername() throws IdMUnitException {
+    public void testReconcileUserWithNonIdAttribute() throws IdMUnitException {
         RestClient rest = RestClient.init(TEST_SERVER, "8080", "openidm-admin", "openidm-admin", false);
         String createAttrs = "{\n" +
                 "        \"givenName\":\"Test\",\n" +
@@ -744,8 +736,8 @@ public class OpenIdmConnectorTests extends TestCase {
         String userId = "tuser2_id";
 
         Map<String, Collection<String>> reconAttrs = new HashMap<String, Collection<String>>();
-        reconAttrs.put("userName", singleValue("tuser2"));
-        reconAttrs.put("mapping", singleValue("managedUser_systemXmlfileAccount"));
+        reconAttrs.put("cn", singleValue("tuser2"));
+        reconAttrs.put("mapping", singleValue("systemLdapAccount_managedUser"));
         try {
             rest.executePost("/managed/user?_action=create", createAttrs);
             RestClient.Response response = rest.executeGet("/managed/" + objectType + "/" + userId + "?_fields=*,*_ref");
@@ -778,23 +770,23 @@ public class OpenIdmConnectorTests extends TestCase {
         RestClient rest = RestClient.init(TEST_SERVER, "8080", "openidm-admin", "openidm-admin", false);
         String id = null;
         String username = "bwayneuser";
-        String mapping = "systemOpendjAccount_managedUser";
+        String mapping = "systemLdapAccount_managedUser";
 
         String createAttrs = "{\n" +
                 "        \"givenName\":\"Bruce\",\n" +
                 "        \"sn\":\"Wayne\",\n" +
                 "        \"mail\":\"bwayne@example.com\",\n" +
-                "        \"dn\":\"cn=bwayneuser,ou=People,dc=example,dc=com\"\n" +
-                "    }";
+                "        \"dn\":\"cn=bwayneuser,ou=People,dc=test\",\n" +
+                "        \"cn\":\"bwayneuser\"\n}";
 
         Map<String, Collection<String>> reconAttrs = new HashMap<String, Collection<String>>();
 
-        reconAttrs.put("dn", singleValue("cn=bwayneuser,ou=People,dc=example,dc=com"));
-        reconAttrs.put("mapping", singleValue("systemOpendjAccount_managedUser"));
+        reconAttrs.put("dn", singleValue("cn=bwayneuser,ou=People,dc=test"));
+        reconAttrs.put("mapping", singleValue("systemLdapAccount_managedUser"));
 
         try {
-            rest.executePost("/system/OpenDJ/account?_action=create", createAttrs);
-            String queryString = String.format("/system/OpenDJ/account?_queryFilter=%s eq \"%s\"&_fields=_id,%2$s", "cn", "bwayneuser");
+            rest.executePost("/system/ldap/account?_action=create", createAttrs);
+            String queryString = String.format("/system/ldap/account?_queryFilter=%s eq \"%s\"&_fields=_id,%2$s", "cn", "bwayneuser");
             JsonObject userFromMappedSystem = new JsonParser().parse(rest.executeGet(queryString.replaceAll(" ", "%20")).messageBody).getAsJsonObject();
             if (userFromMappedSystem.get("result").getAsJsonArray().size() == 0) {
                 throw new IdMUnitException(String.format("User %s was not found in mapped system %s.", username, mapping));
@@ -803,15 +795,15 @@ public class OpenIdmConnectorTests extends TestCase {
             connector.opReconcile(Collections.unmodifiableMap(reconAttrs));
 
         } finally {
-            rest.executePost("/sync?_action=performAction&sourceId=" + id + "&mapping=systemOpendjAccount_managedUser&action=DELETE");
-            rest.executePost("/sync?_action=performAction&sourceId=" + id + "&mapping=systemOpendjAccount_managedUser&action=UNLINK");
-            rest.executeDelete("/system/OpenDJ/account/" + id);
+            rest.executePost("/sync?_action=performAction&sourceId=" + id + "&mapping=systemLdapAccount_managedUser&action=DELETE");
+            rest.executePost("/sync?_action=performAction&sourceId=" + id + "&mapping=systemLdapAccount_managedUser&action=UNLINK");
+            rest.executeDelete("/system/ldap/account/" + id);
         }
     }
 
     public void testLiveSync() throws IdMUnitException {
         Map<String, Collection<String>> attrs = new HashMap<String, Collection<String>>();
-        attrs.put("sourceSystem", singleValue("system/OpenDJ/account"));
+        attrs.put("sourceSystem", singleValue("system/ldap/account"));
         connector.opLiveSync(attrs);
     }
 
