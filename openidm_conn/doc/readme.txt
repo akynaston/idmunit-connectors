@@ -10,11 +10,17 @@ The OpenIDM connector (openidm.jar) requires gson-2.3.jar as well as ojdbc6.jar 
 
 OPERATIONS
 ----------
+
+Note: about attribute postfix specifiers: This connector needs to explicitly force attribute types. These postfixes are can be added to the end of an attribute in the the column header.
+  * There are currently three supported attribute type specifiers that can be used in the column header:
+    * '[]' Open and close brackets can be used to treat the attribute as an array type:  'groups[]' or 'description[]'.
+    * '::boolean' can be used to force an attribute to be treated as a boolean, as in 'loginDisabled::boolean'.
+    * '::string' can be used to force an attribute to be treated like a string: surname::string
+
 AddObject
   * [field names] - values to write to the managed user.  Any attributes required by the managed object must be included in the row.
   * [objectType] - requires this field to indicate type of object we are adding. (ex. user)
-  * you can create an object with a multi valued attribute by placing brackets "[]" behind the column header name (i.e. groups[])
-  * You can create an object with a boolean attribute by placing "::boolean" behind the column header name (i.e. hasAttribute::boolean) values must take the form of "true" or "false"
+  * Supports the attribute specifiers as shown in the note above.
 
 DeleteObject
   * [_id] OR [userName] - requires one of these fields to determine which managed user to remove.  Will also remove all links associated with that user account.
@@ -37,7 +43,7 @@ ValidateObject
     * [_id] OR [userName] - the user to be validated
 	* [field names] - values to compare with fields from the managed user
 	* [objectType] - requires this field to indicate type of object we are adding. (ex. user)
-	* You can validate array values by placing brackets "[]" behind the column header name (i.e. groups[]) and specifying multiple values with a pipe (|) delimiter
+    * Supports the attribute specifiers as shown in the note above.
 	* You can validate null or missing values with "[EMPTY]"
 	* You can test complex attibutes (a composite attribute made up of sub attributes (i.e. courseGroups _> (string Name, boolean Active, string Type)))
 	* Test complex attributes by using a period (.) notation in the column header. Left of the period is the attribute name, right of the period is the sub attribute name (i.e. courseGroups.Type)
@@ -46,7 +52,7 @@ ValidateObjectExact
     * [_id] OR [userName] - the user to be validated
     * [field names] - values to compare with fields from the managed user
     * [objectType] - requires this field to indicate type of object we are adding. (ex. user)
-    * You can validate array values by placing brackets "[]" behind the column header name (i.e. groups[]) and specifying multiple values with a pipe (|) delimiter
+    * Supports the attribute specifiers as shown in the note above.
     * You can validate null or missing values with "[EMPTY]"
     * You can test complex attibutes (a composite attribute made up of sub attributes (i.e. courseGroups _> (string Name, boolean Active, string Type)))
     * Test complex attributes by using a period (.) notation in the column header. Left of the period is the attribute name, right of the period is the sub attribute name (i.e. courseGroups.Type)
@@ -56,20 +62,20 @@ ReplaceAttribute
   * [_id] OR [userName] - the user to be modified.
   * [field names] - values to update on the managed user.
   * [objectType] - requires this field to indicate type of object we are modifying. (ex. user)
-  * You can replace a boolean attribute by placing "::boolean" behind the column header name (i.e. hasAttribute::boolean) values must take the form of "true" or "false"
+  * Supports the attribute specifiers as shown in the note above.
 Note that in this update, OpenIDM __replaces__ all values in the attribute with the ones passed in.
 
 RemoveAttribute
   * [_id] OR [userName] - the user to be modified.
   * [field names] - values to remove on the managed user.
   * [objectType] - requires this field to indicate type of object we are modifying by removing an attribute. (ex. user)
-  * You can remove a boolean attribute by placing "::boolean" behind the column header name (i.e. hasAttribute::boolean) values must take the form of "true" or "false"
+  * Supports the attribute specifiers as shown in the note above.
 
 AddAttribute
   * [_id] OR [userName] - the user to be modified.
   * [field names] - values to be added on the managed user.
   * [objectType] - requires this field to indicate type of object we are adding an attribute to. (ex. user)
-  * You can add a boolean attribute by placing "::boolean" behind the column header name (i.e. hasAttribute::boolean) values must take the form of "true" or "false"
+  * Supports the attribute specifiers as shown in the note above.
 
 CONFIGURATION
 -------------
