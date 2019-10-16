@@ -1321,4 +1321,15 @@ public class OpenIdmConnectorTests extends TestCase {
             rest.executeDelete("/managed/user/tuserid");
         }
     }
+
+    public void testBadAuth() throws IdMUnitException {
+        RestClient rest = RestClient.init(TEST_SERVER, "8080", "badusername", "badpassword", false);
+        try {
+            // attempt any rest connection:
+            RestClient.Response response = rest.executeGet("");
+            fail("Should have failed authentication!");
+        } catch (IdMUnitException e) {
+            assertEquals("Unauthorized(401): Access Denied", e.getMessage());
+        }
+    }
 }
