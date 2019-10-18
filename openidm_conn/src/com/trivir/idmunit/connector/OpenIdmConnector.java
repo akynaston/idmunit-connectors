@@ -58,13 +58,18 @@ public class OpenIdmConnector extends AbstractConnector {
     private RestClient rest;
     private Gson gson = new Gson();
 
+    // Save some connection info for opValidatePassword
+    private String server = null;
+    private String port = null;
+    private boolean sslConnect = false;
+
     public void setup(Map<String, String> config) throws IdMUnitException {
-        String server = config.get(SERVER);
+        server = config.get(SERVER);
         if (server == null) {
             throw new IdMUnitException("Missing configuration for '" + SERVER + "'");
         }
 
-        String port = config.get(PORT);
+        port = config.get(PORT);
         if (port == null) {
             port = DEFAULT_PORT;
         }
@@ -97,7 +102,7 @@ public class OpenIdmConnector extends AbstractConnector {
 
         }
 
-        boolean sslConnect = config.get(SSL_CONNECTION) != null && Boolean.valueOf(config.get(SSL_CONNECTION));
+        sslConnect = config.get(SSL_CONNECTION) != null && Boolean.valueOf(config.get(SSL_CONNECTION));
 
         rest = RestClient.init(server, port, username, password, sslConnect);
     }
@@ -918,6 +923,28 @@ public class OpenIdmConnector extends AbstractConnector {
             return i.next();
         } else {
             return null;
+        }
+    }
+
+    public void opValidatePassword(Map<String, Collection<String>> attrs) throws IdMUnitException {
+        String objectType = ConnectorUtil.getSingleValue(attrs, "objectType");
+        if (objectType == null) {
+            throw new IdMUnitException("No object type provided");
+        }
+
+        String userName = ConnectorUtil.getSingleValue(attrs, "userName");
+        String password = ConnectorUtil.getSingleValue(attrs, "password");
+        if (userName == null || password == null) {
+            throw new IdMUnitException("No 'userName' or 'password' specified for the user");
+        }
+
+        log.info("...authentication for 'userName' of [" + userName + "]");
+        RestClient restTemp = RestClient.init(server, port, userName, password, sslConnect);
+
+        try {
+            RestClient.Response result = restTemp.executePost("/authentication?_action=login");
+        } catch (RestError e) {
+            throw new IdMUnitFailureException("Validate password failed for user [" + userName + "]", e);
         }
     }
 

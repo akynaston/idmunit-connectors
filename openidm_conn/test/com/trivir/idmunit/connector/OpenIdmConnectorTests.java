@@ -1363,4 +1363,28 @@ public class OpenIdmConnectorTests extends TestCase {
             assertEquals("Unauthorized(401): Access Denied", e.getMessage());
         }
     }
+
+    public void testValidatePasswordInternalUserSucceeds() throws IdMUnitException {
+        Map<String, Collection<String>> validatePassword = new HashMap<String, Collection<String>>();
+        validatePassword.put("objectType", singleValue("user"));
+        validatePassword.put("userName", singleValue("openidm-admin"));
+        validatePassword.put("password", singleValue("openidm-admin"));
+
+        connector.opValidatePassword(validatePassword);
+    }
+
+    public void testValidatePasswordInternalUserFails() throws IdMUnitException {
+        Map<String, Collection<String>> validatePassword = new HashMap<String, Collection<String>>();
+        validatePassword.put("objectType", singleValue("user"));
+        validatePassword.put("userName", singleValue("openidm-admin"));
+        validatePassword.put("password", singleValue("badPassword"));
+
+        try {
+            connector.opValidatePassword(validatePassword);
+            fail("Validate Password should have failed, the wrong password was specified!");
+        } catch (IdMUnitFailureException e) {
+            assertEquals("Validate password failed for user [openidm-admin]", e.getMessage());
+        }
+    }
+
 }
