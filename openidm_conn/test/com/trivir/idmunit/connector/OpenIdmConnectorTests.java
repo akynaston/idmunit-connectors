@@ -1256,17 +1256,17 @@ public class OpenIdmConnectorTests extends TestCase {
         rest.executePost("/managed/user?_action=create", createAttrs);
 
         Map<String, Collection<String>> validateAttrs = new HashMap<>();
-        validateAttrs.put("_id", singleValue("bwayneid"));
+        validateAttrs.put("_id", singleValue("tuserid"));
         validateAttrs.put("objectType", singleValue("user"));
-        validateAttrs.put("attrString::string", singleValue("A String ValueShouldFail"));
+        validateAttrs.put("description::string", singleValue("A String ValueShouldFail"));
 
         try {
             connector.opValidateObject(validateAttrs);
             fail("Test Should have failed! Provided validation value was incorrect!");
         } catch (IdMUnitFailureException e) {
-            assertEquals("'.attrString' attribute mismatch: expected \"A String ValueShouldFail\" but was \"A String Value\"", e.getMessage().trim());
+            assertEquals("'.description' attribute mismatch: expected \"A String ValueShouldFail\" but was \"My user to patch\"", e.getMessage().trim());
         } finally {
-            rest.executeDelete("/managed/user/bwayneid");
+            rest.executeDelete("/managed/user/tuserid");
         }
     }
 
