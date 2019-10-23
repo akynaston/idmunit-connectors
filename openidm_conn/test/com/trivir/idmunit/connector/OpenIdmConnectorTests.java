@@ -286,7 +286,7 @@ public class OpenIdmConnectorTests extends TestCase {
             rest.executePost("/managed/user?_action=create", createAttrs);
             connector.opValidateObject(Collections.unmodifiableMap(actualAttrs));
         } catch (IdMUnitFailureException e) {
-            assertEquals("'.mail' attribute mismatch: expected \"BadTest@yahooligans.com\" but was \"tuser@example.com\"", e.getMessage().trim()); //Trimmed because hard returns after the message.
+            assertEquals("'.mail' attribute mismatch: expected \"BadTest@yahooligans.com\" but was \"tuser@example.com\"", e.getMessage());
             //We should see errors for all attributes that are different between the two maps above.
         } finally {
             rest.executeDelete("/managed/user/tuser2_id");
@@ -645,7 +645,7 @@ public class OpenIdmConnectorTests extends TestCase {
             try {
                 connector.opValidateObject(Collections.unmodifiableMap(attrs));
             } catch (IdMUnitFailureException e) {
-                assertEquals("'.authzRoles' attribute mismatch: expected item {\"_ref\":\"badValue\"} was not found in [{\"_ref\":\"repo/internal/role/openidm-authorized\",\"_refProperties\":},{\"_ref\":\"repo/internal/role/openidm-admin\",\"_refProperties\":}]", e.getMessage().replaceAll("\"_refResourceCollection\":\"repo/internal/role\",\"_refResourceId\":\"openidm-\\w{1,}\\\",", "").replaceAll("\\{\"_id\":\"(.{36})\",\"_rev\":\"(\\w{1,})\"\\}", "").trim());
+                assertEquals("'.authzRoles' attribute mismatch: expected item {\"_ref\":\"badValue\"} was not found in [{\"_ref\":\"repo/internal/role/openidm-authorized\",\"_refProperties\":},{\"_ref\":\"repo/internal/role/openidm-admin\",\"_refProperties\":}]", e.getMessage().replaceAll("\"_refResourceCollection\":\"repo/internal/role\",\"_refResourceId\":\"openidm-\\w{1,}\\\",", "").replaceAll("\\{\"_id\":\"(.{36})\",\"_rev\":\"(\\w{1,})\"\\}", ""));
             }
         } finally {
             rest.executeDelete("/managed/user/tuser2_id");
@@ -832,7 +832,7 @@ public class OpenIdmConnectorTests extends TestCase {
             try {
                 connector.opValidateObject(Collections.unmodifiableMap(attrs));
             } catch (IdMUnitFailureException e) {
-                assertEquals("'.testAttr' attribute mismatch: expected item \"four\" was not found in [\"one\",\"two\",\"three\"]", e.getMessage().trim());
+                assertEquals("'.testAttr' attribute mismatch: expected item \"four\" was not found in [\"one\",\"two\",\"three\"]", e.getMessage());
             }
         } finally {
             rest.executeDelete("/managed/user/tuser2_id");
@@ -888,7 +888,7 @@ public class OpenIdmConnectorTests extends TestCase {
             try {
                 connector.opValidateObjectExact(Collections.unmodifiableMap(attrs));
             } catch (IdMUnitFailureException e) {
-                assertEquals("'.testAttr' attribute mismatch: actual item contains 3 values when our expected item contains 4 values. \nExpected values: [\"two\",\"one\",\"three\",\"four\"] \nActual values: [\"one\",\"two\",\"three\"] \n'.testAttr' attribute mismatch: expected item \"four\" was not found in [\"one\",\"two\",\"three\"]", e.getMessage().trim());
+                assertEquals("'.testAttr' attribute mismatch: actual item contains 3 values when our expected item contains 4 values. \nExpected values: [\"two\",\"one\",\"three\",\"four\"] \nActual values: [\"one\",\"two\",\"three\"] \n'.testAttr' attribute mismatch: expected item \"four\" was not found in [\"one\",\"two\",\"three\"]", e.getMessage());
             }
         } finally {
             rest.executeDelete("/managed/user/tuser2_id");
@@ -1014,7 +1014,7 @@ public class OpenIdmConnectorTests extends TestCase {
 
             connector.opValidateObjectDoesNotExist(Collections.unmodifiableMap(attrs));
         } catch (IdMUnitFailureException e) {
-            assertEquals("There is a user that exists with this username", e.getMessage().trim());
+            assertEquals("There is a user that exists with this username", e.getMessage());
         } finally {
             rest.executeDelete("/managed/user/tuser2_id");
         }
@@ -1264,7 +1264,7 @@ public class OpenIdmConnectorTests extends TestCase {
             connector.opValidateObject(validateAttrs);
             fail("Test Should have failed! Provided validation value was incorrect!");
         } catch (IdMUnitFailureException e) {
-            assertEquals("'.description' attribute mismatch: expected \"A String ValueShouldFail\" but was \"My user to patch\"", e.getMessage().trim());
+            assertEquals("'.description' attribute mismatch: expected \"A String ValueShouldFail\" but was \"My user to patch\"", e.getMessage());
         } finally {
             rest.executeDelete("/managed/user/tuserid");
         }
