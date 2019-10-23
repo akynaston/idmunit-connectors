@@ -121,18 +121,18 @@ public class OpenIdmConnectorTests extends TestCase {
         validAttrs.put("_id", singleValue("tuser2_id"));
         validAttrs.put("objectType", singleValue("user"));
 
-        connector.execute("AddObject", Collections.unmodifiableMap(attrs));
+        connector.opAddObject(Collections.unmodifiableMap(attrs));
 
         // remove password from the expected attributes since validating passwords isn't supported yet
         // TODO support validating passwords
         attrs.remove("password");
-        connector.execute("ValidateObject", Collections.unmodifiableMap(validAttrs));
+        connector.opValidateObject(Collections.unmodifiableMap(validAttrs));
 
         Map<String, Collection<String>> userInfo = new HashMap<String, Collection<String>>();
         userInfo.put("userName", singleValue("tuser2"));
         userInfo.put("objectType", singleValue("user"));
 
-        connector.execute("DeleteObject", Collections.unmodifiableMap(userInfo));
+        connector.opDeleteObject(Collections.unmodifiableMap(userInfo));
     }
 
     private static Collection<String> singleValue(String value) {
@@ -284,7 +284,7 @@ public class OpenIdmConnectorTests extends TestCase {
 
         try {
             rest.executePost("/managed/user?_action=create", createAttrs);
-            connector.execute("ValidateObject", Collections.unmodifiableMap(actualAttrs));
+            connector.opValidateObject(Collections.unmodifiableMap(actualAttrs));
         } catch (IdMUnitFailureException e) {
             assertEquals("'.mail' attribute mismatch: expected \"BadTest@yahooligans.com\" but was \"tuser@example.com\"", e.getMessage().trim()); //Trimmed because hard returns after the message.
             //We should see errors for all attributes that are different between the two maps above.
@@ -316,7 +316,7 @@ public class OpenIdmConnectorTests extends TestCase {
         try {
             rest.executePost("/managed/user?_action=create", createAttrs);
 
-            connector.execute("ValidateObject", Collections.unmodifiableMap(newAttrs));
+            connector.opValidateObject(Collections.unmodifiableMap(newAttrs));
         } finally {
             rest.executeDelete("/managed/user/tuser2_id");
         }
@@ -379,7 +379,7 @@ public class OpenIdmConnectorTests extends TestCase {
             Map<String, Collection<String>> userInfo = new HashMap<String, Collection<String>>();
             userInfo.put("userName", singleValue("tuser2"));
             userInfo.put("objectType", singleValue("user"));
-            connector.execute("DeleteObject", Collections.unmodifiableMap(userInfo));
+            connector.opDeleteObject(Collections.unmodifiableMap(userInfo));
 
             response = rest.executeGet("/repo/link?_queryFilter=" + queryFilter);
             json = response.messageBody;
@@ -562,7 +562,7 @@ public class OpenIdmConnectorTests extends TestCase {
         userInfo.put("_id", singleValue("bwayne_id"));
         userInfo.put("objectType", singleValue("user"));
 
-        connector.execute("DeleteObject", Collections.unmodifiableMap(userInfo));
+        connector.opDeleteObject(Collections.unmodifiableMap(userInfo));
     }
 
     public void testDeleteUserNameNotFound() throws IdMUnitException {
@@ -573,13 +573,13 @@ public class OpenIdmConnectorTests extends TestCase {
         userInfo.put("objectType", singleValue("user"));
 
         try {
-            connector.execute("ValidateObject", Collections.unmodifiableMap(userInfo));
+            connector.opValidateObject(Collections.unmodifiableMap(userInfo));
         } catch (IdMUnitException e) {
             //the message may be version-dependent
             assertTrue(e.getMessage().toLowerCase().contains("no objects returned") || e.getMessage().contains("\"resultCount\":0"));
         }
 
-        connector.execute("DeleteObject", Collections.unmodifiableMap(userInfo));
+        connector.opDeleteObject(Collections.unmodifiableMap(userInfo));
     }
 
     public void testValidateComplexAttrSuccess() throws IdMUnitException {
@@ -608,7 +608,7 @@ public class OpenIdmConnectorTests extends TestCase {
             attrs.put("objectType", singleValue("user"));
 
             try {
-                connector.execute("ValidateObject", Collections.unmodifiableMap(attrs));
+                connector.opValidateObject(Collections.unmodifiableMap(attrs));
             } catch (IdMUnitFailureException e) {
                 throw new IdMUnitException(e.getMessage());
             }
@@ -643,7 +643,7 @@ public class OpenIdmConnectorTests extends TestCase {
             attrs.put("authzRoles[]._ref", multiValue("repo/internal/role/openidm-admin", "badValue")); //this test will pass but throw message that authzRoles._ref does not match.
 
             try {
-                connector.execute("ValidateObject", Collections.unmodifiableMap(attrs));
+                connector.opValidateObject(Collections.unmodifiableMap(attrs));
             } catch (IdMUnitFailureException e) {
                 assertEquals("'.authzRoles' attribute mismatch: expected item {\"_ref\":\"badValue\"} was not found in [{\"_ref\":\"repo/internal/role/openidm-authorized\",\"_refProperties\":},{\"_ref\":\"repo/internal/role/openidm-admin\",\"_refProperties\":}]", e.getMessage().replaceAll("\"_refResourceCollection\":\"repo/internal/role\",\"_refResourceId\":\"openidm-\\w{1,}\\\",", "").replaceAll("\\{\"_id\":\"(.{36})\",\"_rev\":\"(\\w{1,})\"\\}", "").trim());
             }
@@ -698,7 +698,7 @@ public class OpenIdmConnectorTests extends TestCase {
             assertEquals("\"tuser2_id\"", user.get("_id").toString());
             assertEquals("\"tuser2\"", user.get("userName").toString());
 
-            connector.execute("Reconcile", Collections.unmodifiableMap(reconAttrs));
+            connector.opReconcile(Collections.unmodifiableMap(reconAttrs));
         } finally {
             rest.executeDelete("/managed/user/tuser2_id");
         }
@@ -830,7 +830,7 @@ public class OpenIdmConnectorTests extends TestCase {
             attrs.put("objectType", singleValue("user"));
 
             try {
-                connector.execute("ValidateObject", Collections.unmodifiableMap(attrs));
+                connector.opValidateObject(Collections.unmodifiableMap(attrs));
             } catch (IdMUnitFailureException e) {
                 assertEquals("'.testAttr' attribute mismatch: expected item \"four\" was not found in [\"one\",\"two\",\"three\"]", e.getMessage().trim());
             }
@@ -859,7 +859,7 @@ public class OpenIdmConnectorTests extends TestCase {
             attrs.put("testAttr[]", multiValue("two", "one", "three"));
             attrs.put("objectType", singleValue("user"));
 
-            connector.execute("ValidateObjectExact", Collections.unmodifiableMap(attrs));
+            connector.opValidateObjectExact(Collections.unmodifiableMap(attrs));
         } finally {
             rest.executeDelete("/managed/user/tuser2_id");
         }
@@ -886,7 +886,7 @@ public class OpenIdmConnectorTests extends TestCase {
             attrs.put("objectType", singleValue("user"));
 
             try {
-                connector.execute("ValidateObjectExact", Collections.unmodifiableMap(attrs));
+                connector.opValidateObjectExact(Collections.unmodifiableMap(attrs));
             } catch (IdMUnitFailureException e) {
                 assertEquals("'.testAttr' attribute mismatch: actual item contains 3 values when our expected item contains 4 values. \nExpected values: [\"two\",\"one\",\"three\",\"four\"] \nActual values: [\"one\",\"two\",\"three\"] \n'.testAttr' attribute mismatch: expected item \"four\" was not found in [\"one\",\"two\",\"three\"]", e.getMessage().trim());
             }
@@ -932,7 +932,7 @@ public class OpenIdmConnectorTests extends TestCase {
             attrs.put("testAttr[]", multiValue("one", "two", "three"));
             attrs.put("objectType", singleValue("user"));
 
-            connector.execute("ValidateObject", Collections.unmodifiableMap(attrs));
+            connector.opValidateObject(Collections.unmodifiableMap(attrs));
 
         } finally {
 
@@ -963,7 +963,7 @@ public class OpenIdmConnectorTests extends TestCase {
             attrs.put("attrBoolean::boolean", singleValue("true"));
             attrs.put("objectType", singleValue("user"));
 
-            connector.execute("ValidateObject", Collections.unmodifiableMap(attrs));
+            connector.opValidateObject(Collections.unmodifiableMap(attrs));
 
         } finally {
 
@@ -976,7 +976,7 @@ public class OpenIdmConnectorTests extends TestCase {
         attrs.put("userName", singleValue("tuser2"));
         attrs.put("objectType", singleValue("user"));
 
-        connector.execute("ValidateObjectDoesNotExist", Collections.unmodifiableMap(attrs));
+        connector.opValidateObjectDoesNotExist(Collections.unmodifiableMap(attrs));
     }
 
      /*
@@ -1012,7 +1012,7 @@ public class OpenIdmConnectorTests extends TestCase {
         try {
             rest.executePost("/managed/user?_action=create", createAttrs);
 
-            connector.execute("ValidateObjectDoesNotExist", Collections.unmodifiableMap(attrs));
+            connector.opValidateObjectDoesNotExist(Collections.unmodifiableMap(attrs));
         } catch (IdMUnitFailureException e) {
             assertEquals("There is a user that exists with this username", e.getMessage().trim());
         } finally {
