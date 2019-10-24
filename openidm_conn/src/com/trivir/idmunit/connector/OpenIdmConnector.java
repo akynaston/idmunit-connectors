@@ -815,11 +815,7 @@ public class OpenIdmConnector extends AbstractConnector {
         List<String> failures = jsonMatches(expectedOutput, actualOutput);
 
         if (failures.size() > 0) {
-            StringBuilder sbFailures = new StringBuilder();
-            for (String failure : failures) {
-                sbFailures.append(failure).append("\n");
-            }
-            throw new IdMUnitFailureException(sbFailures.toString());
+            throw new IdMUnitFailureException(String.join("\n", failures));
         }
     }
 
@@ -828,11 +824,7 @@ public class OpenIdmConnector extends AbstractConnector {
         List<String> failures = jsonExactMatches(expectedOutput, actualOutput);
 
         if (failures.size() > 0) {
-            StringBuilder sbFailures = new StringBuilder();
-            for (String failure : failures) {
-                sbFailures.append(failure).append("\n");
-            }
-            throw new IdMUnitFailureException(sbFailures.toString());
+            throw new IdMUnitFailureException(String.join("\n", failures));
         }
     }
 
