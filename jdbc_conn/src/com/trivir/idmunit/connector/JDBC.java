@@ -47,6 +47,7 @@ import java.util.*;
  */
 public class JDBC extends AbstractConnector {
     protected static final String JDBC_DRIVER = "jdbc-driver-class";
+    static final String NULL = "[EMPTY]";
     private static final String STR_SQL = "sql";
     private static Logger log = LoggerFactory.getLogger(JDBC.class);
     private String jdbcDriver = "com.microsoft.jdbc.sqlserver.SQLServerDriver";
@@ -118,10 +119,9 @@ public class JDBC extends AbstractConnector {
                 String colName = metaData.getColumnName(ctr);
                 log.info("Column Name: " + colName);
                 String attrVal = currentResultSet.getString(ctr);
-                if (attrVal != null && attrVal.trim().length() > 0) {
-                    caseInsensitiveAttrsMap.put(colName, attrVal.trim());
-                    log.info("Column Val: " + attrVal.trim());
-                }
+                //don't sanitize values yet; null and whitespace are legal values
+                caseInsensitiveAttrsMap.put(colName, attrVal);
+                log.info("Column Val: " + attrVal);
             }
         } catch (SQLException e) {
             //Translate the error message to English for the case where the returned row was empty (query had no results)
@@ -158,7 +158,14 @@ public class JDBC extends AbstractConnector {
                 if (!(colName.equalsIgnoreCase(STR_SQL))) {
                     String expectedVal = ConnectorUtil.getSingleValue(data, colName);
                     String actualVal = caseInsensitiveAttrsMap.get(colName);
-                    if (actualVal != null) {
+                    if (NULL.equalsIgnoreCase(expectedVal)) {
+                        log.info(".....validating attribute: [" + colName + "] EXPECTED: [null] ACTUAL: [" + actualVal + "]");
+                        if (actualVal != null) {
+                            errorsFound.add("Validation failed: Attribute [" + colName + "] not equal.  Expected dest value: [null] Actual dest value(s): [" + actualVal.toString() + "]");
+                            continue;
+                        }
+                        log.info("...SUCCESS");
+                    } else if (actualVal != null) {
                         log.info(".....validating attribute: [" + colName + "] EXPECTED: [" + expectedVal + "] ACTUAL: [" + actualVal.toString() + "]");
                         if (!actualVal.matches(expectedVal)) {
                             errorsFound.add("Validation failed: Attribute [" + colName + "] not equal.  Expected dest value: [" + expectedVal + "] Actual dest value(s): [" + actualVal.toString() + "]");

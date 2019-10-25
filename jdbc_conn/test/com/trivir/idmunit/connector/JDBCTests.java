@@ -317,6 +317,40 @@ public class JDBCTests extends TestCase {
         connector.opValidate(testData);
     } //End testOpExecSQLUpdateAttribute()
 
+    public void testOpExecSQLUpdateAttributeNull() throws IdMUnitException {
+        //Update an attribute to null and validate the change
+
+        Map<String, Collection<String>> testData = new HashMap<String, Collection<String>>();
+
+        addKeyValuePair(testData, STR_SQL, "UPDATE " + TABLE_NAME + " SET " + FIRST_NAME_COL + "=null WHERE ID='" + TEST_USER1_PK + "'");
+        connector.opExecSQL(testData);
+
+        testData.clear();
+        addKeyValuePair(testData, STR_SQL, "SELECT * FROM " + TABLE_NAME + " WHERE ID = " + TEST_USER1_PK);
+        addKeyValuePair(testData, PRIMARY_KEY_COL, "1");
+        addKeyValuePair(testData, FIRST_NAME_COL, JDBC.NULL);
+        addKeyValuePair(testData, LAST_NAME_COL, TEST_USER1_LAST_NAME);
+
+        connector.opValidate(testData);
+    } //End testOpExecSQLUpdateAttributeNull()
+
+    public void testOpExecSQLUpdateAttributeWhitespace() throws IdMUnitException {
+        //Update an attribute to whitespace and validate the change
+
+        Map<String, Collection<String>> testData = new HashMap<String, Collection<String>>();
+
+        addKeyValuePair(testData, STR_SQL, "UPDATE " + TABLE_NAME + " SET " + FIRST_NAME_COL + "=' ' WHERE ID='" + TEST_USER1_PK + "'");
+        connector.opExecSQL(testData);
+
+        testData.clear();
+        addKeyValuePair(testData, STR_SQL, "SELECT * FROM " + TABLE_NAME + " WHERE ID = " + TEST_USER1_PK);
+        addKeyValuePair(testData, PRIMARY_KEY_COL, "1");
+        addKeyValuePair(testData, FIRST_NAME_COL, " ");
+        addKeyValuePair(testData, LAST_NAME_COL, TEST_USER1_LAST_NAME);
+
+        connector.opValidate(testData);
+    } //End testOpExecSQLUpdateAttributeWhitespace()
+
     public void testOpExecSQLUpdatePrimaryKey() throws IdMUnitException {
         //Update the Primary Key attribute and validate the change
         final String newPrimaryKey = "3";
