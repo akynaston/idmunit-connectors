@@ -29,6 +29,7 @@ package com.trivir.idmunit.connector;
 
 import com.trivir.idmunit.connector.mail.TemplateHelper;
 import org.idmunit.IdMUnitException;
+import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -303,7 +304,6 @@ public class MailCompare {
                 results.add("Email pieces were not equal for: [Template]\n" + sb.toString());
             }
         }
-
         return results;
     }
 
@@ -571,7 +571,7 @@ public class MailCompare {
         return s;
     }
 
-    private static String normalizeText(String s) throws IdMUnitException {
+    static String normalizeText(String s) throws IdMUnitException {
         /*
          * Normalise the text by performing the following steps
          * 1. Delete all text up to the opening <head> tag
@@ -613,7 +613,10 @@ public class MailCompare {
         // Remove trailing whitespace within tags
         s = s.replaceAll("[\\s]+</(.*)>", "</$1>");
 
-        return "<html>" + s;
+        String ret = "<html>" + s;
+        // LOad into JSoup and then toString
+
+        return Jsoup.parse(ret).toString();
 
     }
 

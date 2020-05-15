@@ -53,8 +53,8 @@ public class IMAPConnectorTemplateTests extends MailTemplateTestBase {
         config.put(MailHelper.CONFIG_PORT, String.valueOf(ConfigTests.DEFAULT_IMAP_PORT));
         config.put(MailHelper.CONFIG_SSL, ConfigTests.DEFAULT_IMAP_SSL);
         config.putAll(ConfigTests.getDefaultLdapConfig(LdapConnectionHelper.LDAP_CONFIG_PREFIX));
-        mailConnector.setup(config);
-        mailConnector.execute("DeleteMail", Collections.<String, Collection<String>>emptyMap());
+        //mailConnector.setup(config);
+        //mailConnector.execute("DeleteMail", Collections.<String, Collection<String>>emptyMap());
 
         deliveryPause = true; // in MailTestBase. Needed for IMAP tests.
 
@@ -131,4 +131,40 @@ public class IMAPConnectorTemplateTests extends MailTemplateTestBase {
             assertEquals("Unsupported attribute(s): [Bogus]", e.getMessage());
         }
     }
+
+    public void testXmlTemplateParsing() throws IdMUnitException {
+        String template = ConfigTests.BASIC_XML_TEMPLATE;
+        String parsedTemplate = MailCompare.normalizeText(template);
+        assertEquals(parsedTemplate, ConfigTests.HTML_RESULT_FROM_XML);
+    }
+
+    //NOT WORKING At the moment.
+//    public void testValidateXmlTemplateWithLinks() throws IdMUnitException {
+//        String template = ConfigTests.XML_TEMPLATE_LINKS_WITH_SEMICOLONS;
+//        Map<String, Collection<String>> data = new TreeMap<String, Collection<String>>(String.CASE_INSENSITIVE_ORDER);
+//
+//        // Legitimate values
+//        addSingleValue(data, "Mailbox", "value");
+//        addSingleValue(data, "To", "value");
+//        addSingleValue(data, "From", "value");
+//        addSingleValue(data, "Subject", "value");
+//        addSingleValue(data, "Body", "value");
+//        addSingleValue(data, "Template", template);
+//        addSingleValue(data, "UserFullName", "value");
+//        addSingleValue(data, "UserGivenName", "value");
+//        addSingleValue(data, "UserLastName", "value");
+//        addSingleValue(data, "ConnectedSystemName", "value");
+//        addSingleValue(data, "FailureReason", "value");
+//
+//        try {
+//            mailConnector.execute("Validate", data);
+//            fail("Expected an exception to be thrown");
+//        } catch (IdMUnitException e) {
+//            assertEquals("Unsupported attribute(s): [Bogus]", e.getMessage());
+//        }
+//    }
+//
+//    public void testXmlParsingWithLinks() {
+//        String template = ConfigTests.XML_TEMPLATE_LINKS_WITH_SEMICOLONS;
+//    }
 }

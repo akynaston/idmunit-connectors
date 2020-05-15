@@ -149,6 +149,61 @@ public class ConfigTests {
             "\t</body>\n" +
             "</html>";
 
+    static final String BASIC_XML_TEMPLATE = "<template name=\"BAES-SD-ServiceNow Call Failed - User Not Authenticated\" subject=\"Identity Vault Interface Error 401: User Not Authenticated \">\n" +
+            "\t<data>\n" +
+            "\t\t<html xmlns:form=\"http://www.novell.com/dirxml/workflow/form\">\n" +
+            "\t\t\t<form:token-descriptions>\n" +
+            "\t\t\t\t<form:token-description description=\"Error recieved by the serer\" item-name=\"ErrorMsg\"/>\n" +
+            "\t\t\t\t<form:token-description description=\"EUID of the user\" item-name=\"EUID\"/>\n" +
+            "\t\t\t</form:token-descriptions>\n" +
+            "\t\t\t<head>\n" +
+            "\t\t\t\t<title>Carltest</title>\n" +
+            "\t\t\t\t<style>\n" +
+            "\t\t\t\t\t<!-- body { font-family: Trebuchet MS } -->\n" +
+            "\t\t\t\t</style>\n" +
+            "\t\t\t</head>\n" +
+            "\t\t\t<body BGCOLOR=\"#FFFFFF\">\n" +
+            "Carls test email - EUID: $EUID$\n" +
+            "</body>\n" +
+            "\t\t</html>\n" +
+            "\t</data>\n" +
+            "</template>";
+
+    static final String XML_TEMPLATE_LINKS_WITH_SEMICOLONS = "<template name=\"BAES-SD-ServiceNow Call Failed - User Not Authenticated\" subject=\"Carl's Test Email - Validate This\">\n" +
+            "\t<data>\n" +
+            "\t\t<html xmlns:form=\"http://www.novell.com/dirxml/workflow/form\">\n" +
+            "\t\t\t<form:token-descriptions>\n" +
+            "\t\t\t\t<form:token-description description=\"Error recieved by the serer\" item-name=\"ErrorMsg\"/>\n" +
+            "\t\t\t\t<form:token-description description=\"EUID of the user\" item-name=\"EUID\"/>\n" +
+            "\t\t\t</form:token-descriptions>\n" +
+            "\t\t\t<head>\n" +
+            "\t\t\t\t<title>Carltest</title>\n" +
+            "\t\t\t\t<style>\n" +
+            "\t\t\t\t\t<!-- body { font-family: Trebuchet MS } -->\n" +
+            "\t\t\t\t</style>\n" +
+            "\t\t\t</head>\n" +
+            "\t\t\t<body BGCOLOR=\"#FFFFFF\">\n" +
+            "Carl's test email - EUID: $EUID$\n" +
+            "\t\t\t\t\t<ul>\n" +
+            "\t\t\t\t\t<li>Please refer to your local Export Control/Compliance Team, or</li>\n" +
+            "\t\t\t\t\t<li>Visit the <a href=\"http://ws-intranet.ent.baesystems.com/sites/HOGL/ExportControl/Pages/default.aspx\">Group Export Control intranet</a> pages, or</li>\n" +
+            "\t\t\t\t\t<li>Visit the <a href=\"https://baesystems.service-now.com/sp_itsm?id=community_message_group&amp;group_sys_id=a4abc886dbb0d304346468684b9619c7\">MyIT Export Control Community Forum</a>, or</li>\n" +
+            "\t\t\t\t\t<li>Visit the FAQs page</li>\n" +
+            "\t\t\t\t</ul>\n" +
+            "\t\t\t</body>\n" +
+            "\t\t</html>\n" +
+            "\t</data>\n" +
+            "</template>";
+
+    static final String HTML_RESULT_FROM_XML = "<html>\n" +
+            " <head>\n" +
+            "  <title>Carltest</title>\n" +
+            "  <style></style>\n" +
+            " </head>\n" +
+            " <body bgcolor=\"#FFFFFF\">\n" +
+            "  Carls test email - EUID: $EUID$\n" +
+            " </body>\n" +
+            "</html>";
 //------------------
 
     static LdapConnector newLdapConnector() throws Exception {
