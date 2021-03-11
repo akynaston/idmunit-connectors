@@ -49,12 +49,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DxcmdConnector extends AbstractConnector {
+public class DxcmdLdapConnector extends AbstractConnector {
     static final String CONFIG_PORT = "port";
     static final String CACHE_EMPTY_FLAG = "CACHE_EMPTY";
     static final String SUCCESS_FLAG = "SUCCESS";
 
-    private static Logger log = LoggerFactory.getLogger(DxcmdConnector.class);
+    private static Logger log = LoggerFactory.getLogger(DxcmdLdapConnector.class);
     Map<String, String> eventProcessingDates;
     private String[] commonArgs;
 

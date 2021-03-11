@@ -41,7 +41,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.*;
 
-public class DxcmdConnectorTests extends TestCase {
+public class DxcmdLdapConnectorTests extends TestCase {
     private static final String CONNECTOR_DN = "Goldlnk Driver.Driver Set.servers.sa.system";
     private static final String CONNECTOR_DN2 = "Active Directory Driver.Driver Set.servers.sa.system";
     private static final String TEST_DN1 = "TestDN1";
@@ -50,7 +50,7 @@ public class DxcmdConnectorTests extends TestCase {
     private static final String TEST_FILE_INITIAL_TIMESTAMP = "20002005";
     private static final String TEST_FILE_UNFINISHED_TIMESTAMP = "20032007";
     private static final String TEST_FILE_FINISHED_TIMESTAMP = "20062012";
-    private DxcmdConnector conn;
+    private DxcmdLdapConnector conn;
 
     private static Collection<String> singleValue(String value) {
         List<String> values = new ArrayList<String>();
@@ -63,15 +63,15 @@ public class DxcmdConnectorTests extends TestCase {
     }
 
     public static String copyFile(String sourceFilePath) throws IdMUnitException, IOException {
-        Document doc = DxcmdConnector.loadXMLFromFS(DxcmdConnector.getXmlFsName(sourceFilePath));
-        BufferedWriter output = new BufferedWriter(new FileWriter(DxcmdConnector.getXmlFsName(addCopyToString(sourceFilePath))));
+        Document doc = DxcmdLdapConnector.loadXMLFromFS(DxcmdLdapConnector.getXmlFsName(sourceFilePath));
+        BufferedWriter output = new BufferedWriter(new FileWriter(DxcmdLdapConnector.getXmlFsName(addCopyToString(sourceFilePath))));
         output.write(doc.toXML());
         output.close();
-        return DxcmdConnector.getXmlFsName(addCopyToString(sourceFilePath));
+        return DxcmdLdapConnector.getXmlFsName(addCopyToString(sourceFilePath));
     }
 
     protected void setUp() throws IdMUnitException {
-        conn = new DxcmdConnector();
+        conn = new DxcmdLdapConnector();
         ConnectionConfigData ccd = new ConnectionConfigData("dxcmd", "org.idmunit.connector.DXCMD");
         ccd.setParam(BasicConnector.CONFIG_USER, "admin.sa.system");
         ccd.setParam(BasicConnector.CONFIG_PASSWORD, "trivir"); // trivir

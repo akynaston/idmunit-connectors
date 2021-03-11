@@ -33,8 +33,8 @@ import org.idmunit.IdMUnitException;
 
 import java.util.*;
 
-public class DxcmdTests extends TestCase {
-    private DxCMD conn;
+public class DxcmdLdapTests extends TestCase {
+    private DxcmdLdap conn;
 
     private static Collection<String> singleValue(String value) {
         List<String> values = new ArrayList<String>();
@@ -43,7 +43,7 @@ public class DxcmdTests extends TestCase {
     }
 
     protected void setUp() throws IdMUnitException {
-        conn = new DxCMD();
+        conn = new DxcmdLdap();
         ConnectionConfigData ccd = new ConnectionConfigData("dxcmd", "org.idmunit.connector.DXCMD");
         ccd.setParam(BasicConnector.CONFIG_USER, "cn=admin,o=services");
         ccd.setParam(BasicConnector.CONFIG_PASSWORD, "trivir");
