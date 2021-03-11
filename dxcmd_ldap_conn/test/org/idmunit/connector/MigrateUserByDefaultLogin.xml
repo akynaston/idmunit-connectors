@@ -1,0 +1,14 @@
+<nds dtdversion="3.5" ndsversion="8.x">
+  <source>
+    <product version="3.5.1.20070411 ">DirXML</product>
+    <contact>Novell, Inc.</contact>
+  </source>
+  <input>
+    <query class-name="User" scope="subtree">
+      <search-class class-name="User"/>
+      <search-attr attr-name="CN">
+        <value>defaultLogin</value>
+      </search-attr>
+    </query>
+  </input>
+</nds>
