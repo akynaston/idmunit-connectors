@@ -30,6 +30,7 @@ package org.idmunit.connector;
 
 import junit.framework.TestCase;
 import org.idmunit.IdMUnitException;
+import org.idmunit.util.LdapConnectionHelper;
 
 import java.util.*;
 
@@ -46,14 +47,11 @@ public class DxcmdLdapTests extends TestCase {
     protected void setUp() throws IdMUnitException {
         conn = new DxcmdLdap();
         ConnectionConfigData ccd = new ConnectionConfigData("dxcmd", "org.idmunit.connector.DXCMD");
-        // ccd.setParam(BasicConnector.CONFIG_SERVER, "172.17.2.19");
-        // ccd.setParam("trusted-cert-file", "172.17.2.19.cer");
-        // ccd.setParam(BasicConnector.CONFIG_USER, "admin.services")
-        // ccd.setParam(BasicConnector.CONFIG_PASSWORD, "B2vPD2UsfKc="); // trivir
-        ccd.setParam(BasicConnector.CONFIG_SERVER, "10.10.30.249");
-        ccd.setParam("trusted-cert-file", "10.10.30.249.cer");
         ccd.setParam(BasicConnector.CONFIG_USER, "cn=admin,o=services");
         ccd.setParam(BasicConnector.CONFIG_PASSWORD, "trivir");
+        ccd.setParam(BasicConnector.CONFIG_SERVER, "10.10.30.249");
+        ccd.setParam(LdapConnectionHelper.CONFIG_TRUST_ALL_CERTS, "true");
+        ccd.setParam(LdapConnectionHelper.CONFIG_USE_TLS, "true");
         conn.setup(ccd.getParams());
     }
 
