@@ -36,8 +36,9 @@ import java.util.*;
 public class DxcmdLdapTests extends TestCase {
     private DxcmdLdap conn;
 
+    @SuppressWarnings("SameParameterValue")
     private static Collection<String> singleValue(String value) {
-        List<String> values = new ArrayList<String>();
+        List<String> values = new ArrayList<>();
         values.add(value);
         return values;
     }
@@ -45,21 +46,25 @@ public class DxcmdLdapTests extends TestCase {
     protected void setUp() throws IdMUnitException {
         conn = new DxcmdLdap();
         ConnectionConfigData ccd = new ConnectionConfigData("dxcmd", "org.idmunit.connector.DXCMD");
-        ccd.setParam(BasicConnector.CONFIG_USER, "cn=admin,o=services");
-        ccd.setParam(BasicConnector.CONFIG_PASSWORD, "trivir");
+        // ccd.setParam(BasicConnector.CONFIG_SERVER, "172.17.2.19");
+        // ccd.setParam("trusted-cert-file", "172.17.2.19.cer");
+        // ccd.setParam(BasicConnector.CONFIG_USER, "admin.services")
+        // ccd.setParam(BasicConnector.CONFIG_PASSWORD, "B2vPD2UsfKc="); // trivir
         ccd.setParam(BasicConnector.CONFIG_SERVER, "10.10.30.249");
         ccd.setParam("trusted-cert-file", "10.10.30.249.cer");
+        ccd.setParam(BasicConnector.CONFIG_USER, "cn=admin,o=services");
+        ccd.setParam(BasicConnector.CONFIG_PASSWORD, "trivir");
         conn.setup(ccd.getParams());
     }
 
-    protected void tearDown() throws IdMUnitException {
+    protected void tearDown() {
         conn.tearDown();
         conn = null;
     }
 
-    public void testMigrateUserNoOptionSpecified() throws IdMUnitException {
+    public void testOpAddObject_noOptionSpecified() {
         try {
-            Map<String, Collection<String>> data = new HashMap<String, Collection<String>>();
+            Map<String, Collection<String>> data = new HashMap<>();
             conn.opAddObject(data);
             fail("Should have thrown exception");
         } catch (IdMUnitException e) {
@@ -67,67 +72,18 @@ public class DxcmdLdapTests extends TestCase {
         }
     }
 
-    public void testMigrateUserMigrateappNoDriverDN() throws IdMUnitException {
-        Map<String, Collection<String>> data = new HashMap<String, Collection<String>>();
-        data.put("option", singleValue("migrateapp"));
+    public void testOpAddObject_unsupportedOption() {
+        final String unsupportedOption = "unsupportedOption";
+        Map<String, Collection<String>> data = new HashMap<>();
+        data.put("option", singleValue(unsupportedOption));
         try {
             conn.opAddObject(data);
             fail("Should have thrown exception");
         } catch (IdMUnitException e) {
-            assertEquals("'dn' of driver to start not specified.", e.getMessage());
+            assertEquals(String.format("Unsupported option '%s'", unsupportedOption), e.getMessage());
         }
     }
 
-    public void testMigrateUserMigrateappNoXmlFile() throws IdMUnitException {
-        Map<String, Collection<String>> data = new HashMap<String, Collection<String>>();
-        data.put("option", singleValue("migrateapp"));
-        data.put("dn", singleValue("RSADriver.EAPDrivers.resources"));
-        try {
-            conn.opAddObject(data);
-            fail("Should have thrown exception");
-        } catch (IdMUnitException e) {
-            assertEquals("'xmlFileData' must be specified.", e.getMessage());
-        }
-    }
-
-    @Deprecated
-    public void testMigrateUserMigrateappXmlFileDoesNotExist() throws IdMUnitException { //TODO: Delete this test. This test is no longer needed because of xmlFile no longer being supported.
-        Map<String, Collection<String>> data = new HashMap<String, Collection<String>>();
-        data.put("option", singleValue("migrateapp"));
-        data.put("dn", singleValue("RSADriver.EAPDrivers.resources"));
-        data.put("xmlFile", singleValue("C:/doesnotexist.gone"));
-
-        try {
-            conn.opAddObject(data);
-            fail("Should have thrown exception");
-        } catch (IdMUnitException e) {
-            assertEquals("'xmlFile' specifed: 'C:/doesnotexist.gone' does not exist!", e.getMessage());
-        }
-    }
-
-    public void testMigrateUserMigrateappDataAndFileSupplied() throws IdMUnitException {
-        Map<String, Collection<String>> data = new HashMap<String, Collection<String>>();
-        data.put("option", singleValue("migrateapp"));
-        data.put("dn", singleValue("RSADriver.EAPDrivers.resources"));
-        data.put("xmlFile", singleValue("C:/doesnotexist.gone"));
-        data.put("xmlFileData", singleValue("and somedata . ."));
-
-        try {
-            conn.opAddObject(data);
-            fail("Should have thrown exception");
-        } catch (IdMUnitException e) {
-            assertEquals("'xmlFile' is no longer supported. Use 'xmlFileData'", e.getMessage());
-        }
-    }
-
-    public void testStartJobNoDN() throws IdMUnitException {
-        Map<String, Collection<String>> data = new HashMap<String, Collection<String>>();
-        data.put("option", singleValue("startjob"));
-        try {
-            conn.opAddObject(data);
-            fail("Should have thrown exception");
-        } catch (IdMUnitException e) {
-            assertEquals("'dn' of job not specified.", e.getMessage());
-        }
-    }
+    // TODO: implement test for uppercase and lowercase options
+    // TODO: implement successful tests
 }

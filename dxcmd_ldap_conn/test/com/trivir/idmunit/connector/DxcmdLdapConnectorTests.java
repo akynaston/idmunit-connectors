@@ -29,34 +29,205 @@
 package com.trivir.idmunit.connector;
 
 import junit.framework.TestCase;
-import nu.xom.Document;
 import org.idmunit.IdMUnitException;
-import org.idmunit.IdMUnitFailureException;
 import org.idmunit.connector.BasicConnector;
 import org.idmunit.connector.ConnectionConfigData;
+import org.idmunit.util.LdapConnectionHelper;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.*;
 
 public class DxcmdLdapConnectorTests extends TestCase {
+
+    private DxcmdLdapConnector conn;
+
+    private static Collection<String> singleValue(String value) {
+        List<String> values = new ArrayList<>();
+        values.add(value);
+        return values;
+    }
+
+    protected void setUp() throws IdMUnitException {
+        conn = new DxcmdLdapConnector();
+        ConnectionConfigData ccd = new ConnectionConfigData("dxcmd", "org.idmunit.connector.DXCMD");
+        ccd.setParam(BasicConnector.CONFIG_USER, "cn=admin,o=services");
+        ccd.setParam(BasicConnector.CONFIG_PASSWORD, "trivir");
+        // ccd.setParam(BasicConnector.CONFIG_SERVER, "172.17.2.19");
+        ccd.setParam(BasicConnector.CONFIG_SERVER, "10.10.30.249");
+        // ccd.setParam("trusted-cert-file", "172.17.2.19.cer");
+        ccd.setParam(LdapConnectionHelper.CONFIG_TRUST_ALL_CERTS, "true");
+        ccd.setParam(LdapConnectionHelper.CONFIG_USE_TLS, "true");
+        conn.setup(ccd.getParams());
+    }
+
+    protected void tearDown() {
+        conn.tearDown();
+        conn = null;
+    }
+
+    public void testOpMigrateApp_noDnSpecified() {
+        Map<String, Collection<String>> data = new HashMap<>();
+        try {
+            conn.opMigrateApp(data);
+            fail("Should have thrown exception");
+        } catch (IdMUnitException e) {
+            assertEquals("'dn' of driver to start not specified.", e.getMessage());
+        }
+    }
+
+    public void testOpMigrateApp_xmlFileOptionSpecified() {
+        Map<String, Collection<String>> data = new HashMap<>();
+        data.put("dn", singleValue("cn=Meaningless DN"));
+        data.put("xmlfile", singleValue("This is a meaningless value"));
+        try {
+            conn.opMigrateApp(data);
+            fail("Should have thrown an exception");
+        } catch (IdMUnitException e) {
+            assertEquals("'xmlfile' option is no longer supported. use 'xmlfiledata'", e.getMessage());
+        }
+    }
+
+    public void testOpMigrateApp_noXmlFileDataSpecified() {
+        Map<String, Collection<String>> data = new HashMap<>();
+        data.put("dn", singleValue("cn=Meaningless DN"));
+        try {
+            conn.opMigrateApp(data);
+            fail("Should have thrown an exception");
+        } catch (IdMUnitException e) {
+            assertEquals("'xmlfiledata' must be specified.", e.getMessage());
+        }
+    }
+
+    // TODO: Tests for successful opMigrateApp call
+
+    public void testOpStartJob_noDnSpecified() {
+        Map<String, Collection<String>> data = new HashMap<>();
+        try {
+            conn.opStartJob(data);
+            fail("Should have thrown exception");
+        } catch (IdMUnitException e) {
+            assertEquals("'dn' of job not specified.", e.getMessage());
+        }
+    }
+
+    // TODO: Tests for successful opStartJob call
+
+    public void testOpValidateDriverState_noDnSpecified() {
+        Map<String, Collection<String>> data = new HashMap<>();
+        try {
+            conn.opValidateDriverState(data);
+            fail("Should have thrown exception");
+        } catch (IdMUnitException e) {
+            assertEquals("'dn' of driver not specified.", e.getMessage());
+        }
+    }
+
+    public void testOpValidateDriverState_noExpectedStatusSpecified() {
+        Map<String, Collection<String>> data = new HashMap<>();
+        data.put("dn", singleValue("cn=Meaningless DN"));
+        try {
+            conn.opValidateDriverState(data);
+            fail("Should have thrown exception");
+        } catch (IdMUnitException e) {
+            assertEquals("No expected status given", e.getMessage());
+        }
+    }
+
+    // TODO: Tests for successful opValidateDriverState call
+
+    public void testOpStartDriver_noDnSpecified() {
+        Map<String, Collection<String>> data = new HashMap<>();
+        try {
+            conn.opStartDriver(data);
+            fail("Should have thrown an exception");
+        } catch (IdMUnitException e) {
+            assertEquals("'dn' of driver to start not specified.", e.getMessage());
+        }
+    }
+
+    // TODO: Tests for successful opStartDriver call
+
+    public void testOpStopDriver_noDnSpecified() {
+        Map<String, Collection<String>> data = new HashMap<>();
+        try {
+            conn.opStopDriver(data);
+            fail("Should have thrown an exception");
+        } catch (IdMUnitException e) {
+            assertEquals("'dn' of driver to stop not specified.", e.getMessage());
+        }
+    }
+
+    // TODO: Tests for successful opStopDriver call
+
+    public void testOpSetDriverStatusManual_noDnSpecified() {
+        Map<String, Collection<String>> data = new HashMap<>();
+        try {
+            conn.opSetDriverStatusManual(data);
+            fail("Should have thrown an exception");
+        } catch (IdMUnitException e) {
+            assertEquals("'dn' of driver not specified.", e.getMessage());
+        }
+    }
+
+    // TODO: Tests for successful opSetDriverStatusManual call
+
+    public void testOpSetDriverStatusAuto_noDnSpecified() {
+        Map<String, Collection<String>> data = new HashMap<>();
+        try {
+            conn.opSetDriverStatusAuto(data);
+            fail("Should have thrown an exception");
+        } catch (IdMUnitException e) {
+            assertEquals("'dn' of driver not specified.", e.getMessage());
+        }
+    }
+
+    // TODO: Tests for successful opSetDriverStatusAuto call
+
+    public void testOpSetDriverStatusDisabled_noDnSpecified() {
+        Map<String, Collection<String>> data = new HashMap<>();
+        try {
+            conn.opSetDriverStatusDisabled(data);
+            fail("Should have thrown an exception");
+        } catch (IdMUnitException e) {
+            assertEquals("'dn' of driver not specified.", e.getMessage());
+        }
+    }
+
+    // TODO: Tests for successful opSetDriverStatusDisabled call
+
+    /*
+     * TODO: Implement the following tests or mark as private:
+     *   - parseStatusInt
+     *   - parseStatusString
+     *   - writeXmlData
+     *   - getDriverState
+     *   - isDriverRunning
+     *   - isDriverStopped
+     *   - getDriverStartOption
+     *   - getJobState
+     */
+
+
+    /*
+     * ----------------------------------------------------------------------------------------------------------------
+     *
+     * These modifications were added in SVN revision 13126 by krawlings with the note:
+     *   "Checking in dxcmd patch from Andrew and Carl with some cleanup."
+     *
+     * Three hours later in SVN revision 13127 krawlings noted:
+     *   "- Reordered some statements in the connector.
+     *    - Existing behavior remains unmodified, but new behavior can not be tested due to missing XML files."
+     *
+
+
     private static final String CONNECTOR_DN = "Goldlnk Driver.Driver Set.servers.sa.system";
     private static final String CONNECTOR_DN2 = "Active Directory Driver.Driver Set.servers.sa.system";
     private static final String TEST_DN1 = "TestDN1";
     private static final String TEST_DN2 = "TestDN2";
     private static final String TEST_FILE_NO_CACHE = "NoCache";
     private static final String TEST_FILE_INITIAL_TIMESTAMP = "20002005";
+    private static final String TEST_FILE_INITIAL_TIMESTAMP = ".//Documents/20002005";
     private static final String TEST_FILE_UNFINISHED_TIMESTAMP = "20032007";
     private static final String TEST_FILE_FINISHED_TIMESTAMP = "20062012";
-    private DxcmdLdapConnector conn;
-
-    private static Collection<String> singleValue(String value) {
-        List<String> values = new ArrayList<String>();
-        values.add(value);
-        return values;
-    }
 
     public static String addCopyToString(String string) {
         return string + "_copy";
@@ -70,83 +241,11 @@ public class DxcmdLdapConnectorTests extends TestCase {
         return DxcmdLdapConnector.getXmlFsName(addCopyToString(sourceFilePath));
     }
 
-    protected void setUp() throws IdMUnitException {
-        conn = new DxcmdLdapConnector();
-        ConnectionConfigData ccd = new ConnectionConfigData("dxcmd", "org.idmunit.connector.DXCMD");
-        ccd.setParam(BasicConnector.CONFIG_USER, "admin.sa.system");
-        ccd.setParam(BasicConnector.CONFIG_PASSWORD, "trivir"); // trivir
-        ccd.setParam(BasicConnector.CONFIG_SERVER, "172.17.2.105");
-        conn.setup(ccd.getParams());
-    }
-
-    protected void tearDown() throws IdMUnitException {
-        conn.tearDown();
-        conn = null;
-    }
-
-    public void testMigrateUserMigrateappNoDriverDN() throws IdMUnitException {
-        Map<String, Collection<String>> data = new HashMap<String, Collection<String>>();
-        try {
-            conn.opMigrateApp(data);
-            fail("Should have thrown exception");
-        } catch (IdMUnitException e) {
-            assertEquals("The driver dot format of the driver to process the command must be specified 'driverdn' or 'dn' must be specified", e.getMessage());
-        }
-    }
-
-    public void testMigrateUserMigrateappNoXmlFile() throws IdMUnitException {
-        Map<String, Collection<String>> data = new HashMap<String, Collection<String>>();
-        data.put("driverdn", singleValue("RSADriver.EAPDrivers.resources"));
-        try {
-            conn.opMigrateApp(data);
-            fail("Should have thrown exception");
-        } catch (IdMUnitException e) {
-            assertEquals("Either 'xmlFile' or 'xmlFileData' must be specified.", e.getMessage());
-        }
-    }
-
-    public void testMigrateUserMigrateappXmlFileDoesNotExist() throws IdMUnitException {
-        Map<String, Collection<String>> data = new HashMap<String, Collection<String>>();
-        data.put("driverdn", singleValue("RSADriver.EAPDrivers.resources"));
-        data.put("xmlFile", singleValue("C:/doesnotexist.gone"));
-
-        try {
-            conn.opMigrateApp(data);
-            fail("Should have thrown exception");
-        } catch (IdMUnitException e) {
-            assertEquals("'xmlFile' specifed: 'C:/doesnotexist.gone' does not exist!", e.getMessage());
-        }
-    }
-
-    public void testMigrateUserMigrateappDataAndFileSupplied() throws IdMUnitException {
-        Map<String, Collection<String>> data = new HashMap<String, Collection<String>>();
-        data.put("driverdn", singleValue("RSADriver.EAPDrivers.resources"));
-        data.put("xmlFile", singleValue("C:/doesnotexist.gone"));
-        data.put("xmlFileData", singleValue("and somedata . ."));
-
-        try {
-            conn.opMigrateApp(data);
-            fail("Should have thrown exception");
-        } catch (IdMUnitException e) {
-            assertEquals("Specify either 'xmlFile' or 'xmlFileData', do not use both.", e.getMessage());
-        }
-    }
-
-    public void testStartJobNoDN() throws IdMUnitException {
-        Map<String, Collection<String>> data = new HashMap<String, Collection<String>>();
-        try {
-            conn.opStartJob(data);
-            fail("Should have thrown exception");
-        } catch (IdMUnitException e) {
-            assertEquals("'dn' of job not specified.", e.getMessage());
-        }
-    }
-
-    public void testCheckDriverProcessing() throws IdMUnitException, ParseException {
-        Map<String, Collection<String>> data = new HashMap<String, Collection<String>>();
-        List<String> dns = new ArrayList<String>();
+    public void testCheckDriverProcessing() throws IdMUnitException, ParseException, NamingException, LDAPException {
+        Map<String, Collection<String>> data = new HashMap<>();
+        List<String> dns = new ArrayList<>();
+//        dns.add(CONNECTOR_DN);
         dns.add(CONNECTOR_DN);
-        dns.add(CONNECTOR_DN2);
 
         data.put("dn", dns);
 
@@ -250,12 +349,12 @@ public class DxcmdLdapConnectorTests extends TestCase {
     public void testCheckDriverCache_SomethingSomethingNotDone() throws IdMUnitException, ParseException, IOException {
         //Expect Failure
         try {
-            conn.validateCacheXml(TEST_DN1, copyFile(TEST_FILE_INITIAL_TIMESTAMP));
+            conn.validateCacheXml(CONNECTOR_DN, copyFile(TEST_FILE_INITIAL_TIMESTAMP));
         } catch (IdMUnitFailureException e) {
             //ignore exception
         }
         try {
-            conn.validateCacheXml(TEST_DN1, copyFile(TEST_FILE_UNFINISHED_TIMESTAMP));
+            conn.validateCacheXml(CONNECTOR_DN, copyFile(TEST_FILE_UNFINISHED_TIMESTAMP));
             fail("Should have thrown an exception");
         } catch (IdMUnitFailureException e) {
             //ignore exception
@@ -316,4 +415,6 @@ public class DxcmdLdapConnectorTests extends TestCase {
             //ignore exception
         }
     }
+
+     */
 }

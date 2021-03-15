@@ -38,7 +38,7 @@ import java.util.Map;
 
 public class DxcmdLdap extends DxcmdLdapConnector {
     public void opAddObject(Map<String, Collection<String>> data) throws IdMUnitException {
-        Map<String, Collection<String>> fields = new HashMap<String, Collection<String>>();
+        Map<String, Collection<String>> fields = new HashMap<>();
         for (String name : data.keySet()) {
             fields.put(name.toLowerCase(), data.get(name));
         }
@@ -48,12 +48,15 @@ public class DxcmdLdap extends DxcmdLdapConnector {
             throw new IdMUnitException("'option' not specified");
         }
 
-        if ("migrateapp".equals(option)) {
-            opMigrateApp(fields);
-        } else if ("startjob".equals(option)) {
-            opStartJob(fields);
-        } else {
-            throw new IdMUnitException("Unsupported option '" + option + "'");
+        switch (option) {
+            case "migrateapp":
+                opMigrateApp(fields);
+                break;
+            case "startjob":
+                opStartJob(fields);
+                break;
+            default:
+                throw new IdMUnitException("Unsupported option '" + option + "'");
         }
     }
 }
