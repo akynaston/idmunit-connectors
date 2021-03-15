@@ -28,7 +28,7 @@
 
 package org.idmunit.connector;
 
-import com.trivir.idmunit.connector.DxcmdLdapConnector;
+import com.trivir.idmunit.connector.DirxmlLdapConnector;
 import org.idmunit.IdMUnitException;
 
 import java.util.Collection;
@@ -36,7 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class DxcmdLdap extends DxcmdLdapConnector {
+public class DirxmlLdap extends DirxmlLdapConnector {
     public void opAddObject(Map<String, Collection<String>> data) throws IdMUnitException {
         Map<String, Collection<String>> fields = new HashMap<>();
         for (String name : data.keySet()) {

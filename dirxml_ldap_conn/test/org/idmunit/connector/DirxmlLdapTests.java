@@ -34,8 +34,8 @@ import org.idmunit.util.LdapConnectionHelper;
 
 import java.util.*;
 
-public class DxcmdLdapTests extends TestCase {
-    private DxcmdLdap conn;
+public class DirxmlLdapTests extends TestCase {
+    private DirxmlLdap conn;
 
     @SuppressWarnings("SameParameterValue")
     private static Collection<String> singleValue(String value) {
@@ -45,7 +45,7 @@ public class DxcmdLdapTests extends TestCase {
     }
 
     protected void setUp() throws IdMUnitException {
-        conn = new DxcmdLdap();
+        conn = new DirxmlLdap();
         ConnectionConfigData ccd = new ConnectionConfigData("dxcmd", "org.idmunit.connector.DXCMD");
         ccd.setParam(BasicConnector.CONFIG_USER, "cn=admin,o=services");
         ccd.setParam(BasicConnector.CONFIG_PASSWORD, "trivir");

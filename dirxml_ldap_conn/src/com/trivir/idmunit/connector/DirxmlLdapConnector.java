@@ -52,7 +52,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DxcmdLdapConnector extends AbstractConnector {
+public class DirxmlLdapConnector extends AbstractConnector {
     static final String RUNNING = "running";
     static final String STARTING = "starting";
     static final String STOPPED = "stopped";
