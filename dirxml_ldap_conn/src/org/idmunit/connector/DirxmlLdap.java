@@ -38,7 +38,7 @@ import java.util.Map;
 
 public class DirxmlLdap extends DirxmlLdapConnector {
     public void opAddObject(Map<String, Collection<String>> data) throws IdMUnitException {
-        Map<String, Collection<String>> fields = new HashMap<>();
+        Map<String, Collection<String>> fields = new HashMap<String, Collection<String>>();
         for (String name : data.keySet()) {
             fields.put(name.toLowerCase(), data.get(name));
         }
@@ -48,15 +48,12 @@ public class DirxmlLdap extends DirxmlLdapConnector {
             throw new IdMUnitException("'option' not specified");
         }
 
-        switch (option) {
-            case "migrateapp":
-                opMigrateApp(fields);
-                break;
-            case "startjob":
-                opStartJob(fields);
-                break;
-            default:
-                throw new IdMUnitException("Unsupported option '" + option + "'");
+        if ("migrateapp".equals(option)) {
+            opMigrateApp(fields);
+        } else if ("startjob".equals(option)) {
+            opStartJob(fields);
+        } else {
+            throw new IdMUnitException("Unsupported option '" + option + "'");
         }
     }
 }

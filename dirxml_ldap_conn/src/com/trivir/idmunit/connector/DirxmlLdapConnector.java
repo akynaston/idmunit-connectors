@@ -63,7 +63,7 @@ public class DirxmlLdapConnector extends AbstractConnector {
     private LdapContext ldapContext;
 
     public void setup(Map<String, String> config) throws IdMUnitException {
-        this.ldapContext = (LdapContext)LdapConnectionHelper.createLdapConnection(new HashMap<>(config));
+        this.ldapContext = (LdapContext)LdapConnectionHelper.createLdapConnection(new HashMap<String, String>(config));
     }
 
     public void tearDown() {
@@ -91,7 +91,9 @@ public class DirxmlLdapConnector extends AbstractConnector {
 
         try {
             ldapContext.extendedOperation(new MigrateAppRequest(driverDn, xmlFileData.getBytes()));
-        } catch (NamingException | LDAPException e) {
+        } catch (NamingException e) {
+            throw new IdMUnitException("unexpected error when migrating the job " + driverDn, e);
+        } catch (LDAPException e) {
             throw new IdMUnitException("unexpected error when migrating the job " + driverDn, e);
         }
     }
@@ -104,7 +106,9 @@ public class DirxmlLdapConnector extends AbstractConnector {
 
         try {
             ldapContext.extendedOperation(new StartJobRequest(jobDN));
-        } catch (NamingException | LDAPException e) {
+        } catch (NamingException e) {
+            throw new IdMUnitException("unexpected error when starting job " + jobDN, e);
+        } catch (LDAPException e) {
             throw new IdMUnitException("unexpected error when starting job " + jobDN, e);
         }
     }
@@ -165,7 +169,9 @@ public class DirxmlLdapConnector extends AbstractConnector {
 
         try {
             ldapContext.extendedOperation(new StartDriverRequest(driverDn));
-        } catch (NamingException | LDAPException e) {
+        } catch (NamingException e) {
+            throw new IdMUnitException("unexpected error when starting driver " + driverDn, e);
+        } catch (LDAPException e) {
             throw new IdMUnitException("unexpected error when starting driver " + driverDn, e);
         }
     }
@@ -178,7 +184,9 @@ public class DirxmlLdapConnector extends AbstractConnector {
 
         try {
             ldapContext.extendedOperation(new StopDriverRequest(driverDn));
-        } catch (NamingException | LDAPException e) {
+        } catch (NamingException e) {
+            throw new IdMUnitException("unexpected error when stopping driver " + driverDn, e);
+        } catch (LDAPException e) {
             throw new IdMUnitException("unexpected error when stopping driver " + driverDn, e);
         }
     }
@@ -191,7 +199,9 @@ public class DirxmlLdapConnector extends AbstractConnector {
 
         try {
             ldapContext.extendedOperation(new SetDriverStartOptionRequest(driverDn, DxConst.VR_DRIVER_MANUAL_START, false));
-        } catch (NamingException | LDAPException e) {
+        } catch (NamingException e) {
+            throw new IdMUnitException("unexpected error when stopping driver " + driverDn, e);
+        } catch (LDAPException e) {
             throw new IdMUnitException("unexpected error when stopping driver " + driverDn, e);
         }
     }
@@ -204,7 +214,9 @@ public class DirxmlLdapConnector extends AbstractConnector {
 
         try {
             ldapContext.extendedOperation(new SetDriverStartOptionRequest(driverDn, DxConst.VR_DRIVER_AUTO_START, false));
-        } catch (NamingException | LDAPException e) {
+        } catch (NamingException e) {
+            throw new IdMUnitException("unexpected error when stopping driver " + driverDn, e);
+        } catch (LDAPException e) {
             throw new IdMUnitException("unexpected error when stopping driver " + driverDn, e);
         }
     }
@@ -217,7 +229,9 @@ public class DirxmlLdapConnector extends AbstractConnector {
 
         try {
             ldapContext.extendedOperation(new SetDriverStartOptionRequest(driverDn, DxConst.VR_DRIVER_DISABLED, false));
-        } catch (NamingException | LDAPException e) {
+        } catch (NamingException e) {
+            throw new IdMUnitException("unexpected error when stopping driver " + driverDn, e);
+        } catch (LDAPException e) {
             throw new IdMUnitException("unexpected error when stopping driver " + driverDn, e);
         }
     }
@@ -241,7 +255,9 @@ public class DirxmlLdapConnector extends AbstractConnector {
         try {
             GetDriverStateResponse response = (GetDriverStateResponse)ldapContext.extendedOperation(new GetDriverStateRequest(driverDn));
             return response.getDriverState();
-        } catch (NamingException | LDAPException e) {
+        } catch (NamingException e) {
+            throw new IdMUnitException("Could not read driver state", e);
+        } catch (LDAPException e) {
             throw new IdMUnitException("Could not read driver state", e);
         }
     }
@@ -297,7 +313,11 @@ public class DirxmlLdapConnector extends AbstractConnector {
             }
             bos.close();
             return bos.toByteArray();
-        } catch (NamingException | LDAPException | IOException e) {
+        } catch (NamingException e) {
+            throw new IdMUnitException(e);
+        } catch (LDAPException e) {
+            throw new IdMUnitException(e);
+        } catch (IOException e) {
             throw new IdMUnitException(e);
         }
     }
@@ -308,7 +328,11 @@ public class DirxmlLdapConnector extends AbstractConnector {
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = dbFactory.newDocumentBuilder();
             return builder.parse(new InputSource(new StringReader(newXml)));
-        } catch (ParserConfigurationException | SAXException | IOException e) {
+        } catch (ParserConfigurationException e) {
+            throw new IdMUnitException(e);
+        } catch (SAXException e) {
+            throw new IdMUnitException(e);
+        } catch (IOException e) {
             throw new IdMUnitException(e);
         }
     }
