@@ -12,6 +12,9 @@
 
     <path id="classpath">
         <fileset file="${idmunit-core.dir}/lib/xom-1.2.3.jar"/>
+        <fileset file="${basedir}/lib/ldap.jar"/>
+        <fileset file="${basedir}/lib/dirxml.jar"/>
+        <fileset file="${basedir}/lib/dirxml_misc.jar"/>
     </path>
 
     <import file="${idmunit-core.dir}/ant-build-connector.xml"/>
