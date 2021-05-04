@@ -71,14 +71,14 @@ public class DirxmlLdapTests extends TestCase {
     }
 
     public void testOpAddObject_unsupportedOption() {
-        final String TEST_UNSUPPORTED_OPTION_VALUE = "lorem ipsum";
+        final String testUnsupportedOptionValue = "lorem ipsum";
         Map<String, Collection<String>> data = new HashMap<>();
-        data.put("option", singleValue(TEST_UNSUPPORTED_OPTION_VALUE));
+        data.put("option", singleValue(testUnsupportedOptionValue));
         try {
             conn.opAddObject(data);
             fail("Should have thrown exception");
         } catch (IdMUnitException e) {
-            assertEquals(String.format("Unsupported option '%s'", TEST_UNSUPPORTED_OPTION_VALUE), e.getMessage());
+            assertEquals(String.format("Unsupported option '%s'", testUnsupportedOptionValue), e.getMessage());
         }
     }
 
