@@ -63,7 +63,7 @@ public class DirxmlLdapConnector extends AbstractConnector {
     private LdapContext ldapContext;
 
     public void setup(Map<String, String> config) throws IdMUnitException {
-        this.ldapContext = (LdapContext)LdapConnectionHelper.createLdapConnection(new HashMap<String, String>(config));
+        this.ldapContext = LdapConnectionHelper.createLdapConnection(new HashMap<>(config));
     }
 
     public void tearDown() {
@@ -78,12 +78,6 @@ public class DirxmlLdapConnector extends AbstractConnector {
             throw new IdMUnitException("'xmlfile' option is no longer supported. use 'xmlfiledata'");
         }
 
-        /*
-         * TODO: this is for migrateObjectFromApp - using this function as the Connection interface does not support 'migrateObject'
-         *   Support xml attribute containing one XDS query document that will be applied to application response instances will
-         *   be applied to eDirectory as synthetic adds.
-         */
-
         String xmlFileData = ConnectorUtil.getSingleValue(fields, "xmlfiledata");
         if (xmlFileData == null) {
             throw new IdMUnitException("'xmlfiledata' must be specified.");
@@ -91,9 +85,7 @@ public class DirxmlLdapConnector extends AbstractConnector {
 
         try {
             ldapContext.extendedOperation(new MigrateAppRequest(driverDn, xmlFileData.getBytes()));
-        } catch (NamingException e) {
-            throw new IdMUnitException("unexpected error when migrating the job " + driverDn, e);
-        } catch (LDAPException e) {
+        } catch (NamingException | LDAPException e) {
             throw new IdMUnitException("unexpected error when migrating the job " + driverDn, e);
         }
     }
@@ -106,9 +98,7 @@ public class DirxmlLdapConnector extends AbstractConnector {
 
         try {
             ldapContext.extendedOperation(new StartJobRequest(jobDN));
-        } catch (NamingException e) {
-            throw new IdMUnitException("unexpected error when starting job " + jobDN, e);
-        } catch (LDAPException e) {
+        } catch (NamingException | LDAPException e) {
             throw new IdMUnitException("unexpected error when starting job " + jobDN, e);
         }
     }
@@ -169,9 +159,7 @@ public class DirxmlLdapConnector extends AbstractConnector {
 
         try {
             ldapContext.extendedOperation(new StartDriverRequest(driverDn));
-        } catch (NamingException e) {
-            throw new IdMUnitException("unexpected error when starting driver " + driverDn, e);
-        } catch (LDAPException e) {
+        } catch (NamingException | LDAPException e) {
             throw new IdMUnitException("unexpected error when starting driver " + driverDn, e);
         }
     }
@@ -184,9 +172,7 @@ public class DirxmlLdapConnector extends AbstractConnector {
 
         try {
             ldapContext.extendedOperation(new StopDriverRequest(driverDn));
-        } catch (NamingException e) {
-            throw new IdMUnitException("unexpected error when stopping driver " + driverDn, e);
-        } catch (LDAPException e) {
+        } catch (NamingException | LDAPException e) {
             throw new IdMUnitException("unexpected error when stopping driver " + driverDn, e);
         }
     }
@@ -199,10 +185,8 @@ public class DirxmlLdapConnector extends AbstractConnector {
 
         try {
             ldapContext.extendedOperation(new SetDriverStartOptionRequest(driverDn, DxConst.VR_DRIVER_MANUAL_START, false));
-        } catch (NamingException e) {
-            throw new IdMUnitException("unexpected error when stopping driver " + driverDn, e);
-        } catch (LDAPException e) {
-            throw new IdMUnitException("unexpected error when stopping driver " + driverDn, e);
+        } catch (NamingException | LDAPException e) {
+            throw new IdMUnitException("setting driver status to disabled " + driverDn, e);
         }
     }
 
@@ -214,10 +198,8 @@ public class DirxmlLdapConnector extends AbstractConnector {
 
         try {
             ldapContext.extendedOperation(new SetDriverStartOptionRequest(driverDn, DxConst.VR_DRIVER_AUTO_START, false));
-        } catch (NamingException e) {
-            throw new IdMUnitException("unexpected error when stopping driver " + driverDn, e);
-        } catch (LDAPException e) {
-            throw new IdMUnitException("unexpected error when stopping driver " + driverDn, e);
+        } catch (NamingException | LDAPException e) {
+            throw new IdMUnitException("setting driver status to disabled " + driverDn, e);
         }
     }
 
@@ -229,22 +211,19 @@ public class DirxmlLdapConnector extends AbstractConnector {
 
         try {
             ldapContext.extendedOperation(new SetDriverStartOptionRequest(driverDn, DxConst.VR_DRIVER_DISABLED, false));
-        } catch (NamingException e) {
-            throw new IdMUnitException("unexpected error when stopping driver " + driverDn, e);
-        } catch (LDAPException e) {
-            throw new IdMUnitException("unexpected error when stopping driver " + driverDn, e);
+        } catch (NamingException | LDAPException e) {
+            throw new IdMUnitException("setting driver status to disabled " + driverDn, e);
         }
     }
 
     private static File writeXMLData(String xmlDataToWrite) throws IdMUnitException {
         File xmlFileHandle;
-        PrintWriter xmlFile;
         try {
             xmlFileHandle = File.createTempFile("tmpfile", ".xml");
             xmlFileHandle.deleteOnExit();
-            xmlFile = new PrintWriter(new FileWriter(xmlFileHandle));
-            xmlFile.write(xmlDataToWrite);
-            xmlFile.close();
+            try (PrintWriter xmlFile = new PrintWriter(new FileWriter(xmlFileHandle))) {
+                xmlFile.write(xmlDataToWrite);
+            }
         } catch (IOException e) {
             throw new IdMUnitException("Could not create temp file, or failed writing data: " + e.getMessage(), e);
         }
@@ -255,9 +234,7 @@ public class DirxmlLdapConnector extends AbstractConnector {
         try {
             GetDriverStateResponse response = (GetDriverStateResponse)ldapContext.extendedOperation(new GetDriverStateRequest(driverDn));
             return response.getDriverState();
-        } catch (NamingException e) {
-            throw new IdMUnitException("Could not read driver state", e);
-        } catch (LDAPException e) {
+        } catch (NamingException | LDAPException e) {
             throw new IdMUnitException("Could not read driver state", e);
         }
     }
@@ -313,11 +290,7 @@ public class DirxmlLdapConnector extends AbstractConnector {
             }
             bos.close();
             return bos.toByteArray();
-        } catch (NamingException e) {
-            throw new IdMUnitException(e);
-        } catch (LDAPException e) {
-            throw new IdMUnitException(e);
-        } catch (IOException e) {
+        } catch (NamingException | LDAPException | IOException e) {
             throw new IdMUnitException(e);
         }
     }
@@ -328,11 +301,7 @@ public class DirxmlLdapConnector extends AbstractConnector {
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = dbFactory.newDocumentBuilder();
             return builder.parse(new InputSource(new StringReader(newXml)));
-        } catch (ParserConfigurationException e) {
-            throw new IdMUnitException(e);
-        } catch (SAXException e) {
-            throw new IdMUnitException(e);
-        } catch (IOException e) {
+        } catch (ParserConfigurationException | SAXException | IOException e) {
             throw new IdMUnitException(e);
         }
     }
@@ -348,127 +317,4 @@ public class DirxmlLdapConnector extends AbstractConnector {
             throw new IdMUnitException(e);
         }
     }
-
-    /*
-     * ----------------------------------------------------------------------------------------------------------------
-     *
-     * These modifications were added in SVN revision 13126 by krawlings with the note:
-     *   "Checking in dxcmd patch from Andrew and Carl with some cleanup."
-     *
-     * Three hours later in SVN revision 13127 krawlings noted:
-     *   "- Reordered some statements in the connector.
-     *    - Existing behavior remains unmodified, but new behavior can not be tested due to missing XML files."
-     *
-
-    static final String CACHE_EMPTY_FLAG = "CACHE_EMPTY";
-    static final String SUCCESS_FLAG = "SUCCESS";
-    Map<String, String> eventProcessingDates;
-
-    static Document loadXMLFromFS(String fullPath) throws IdMUnitException {
-        Document doc;
-        try {
-            Builder parser = new Builder();
-            doc = parser.build(fullPath);
-        } catch (ParsingException e) {
-            throw new IdMUnitException("Error parsing configuration.", e);
-        } catch (IOException e) {
-            throw new IdMUnitException("Error reading configuration.", e);
-        }
-
-        return doc;
-    }
-
-    public static String getXmlFsName(String driverDn) {
-        return driverDn.replaceAll(" ", "_") + ".xml";
-    }
-
-    public void opCheckDriverProcessing(Map<String, Collection<String>> fields) throws IdMUnitException, ParseException, NamingException, LDAPException {
-        Failures failures = new Failures();
-
-        for (String currentDN : fields.get("dn")) {
-            if (currentDN == null) {
-                throw new IdMUnitException("'dn' of job not specified.");
-            }
-
-            if (!eventProcessingDates.containsKey(currentDN)) {
-                eventProcessingDates.put(currentDN, null);
-            }
-            GetDriverStatsResponse resp = (GetDriverStatsResponse)ldapContext.extendedOperation(new GetDriverStatsRequest(currentDN, 10));
-
-            try {
-                validateCacheXml(currentDN, getXmlFsName(currentDN));
-            } catch (IdMUnitFailureException e) {
-                failures.add(e.getMessage());
-            }
-        }
-
-        //clear everything
-        if (failures.hasFailures()) {
-            logger.info(failures.toString());
-            throw new IdMUnitFailureException(failures.toString());
-        } else { //No Failures, clear the success and fall out with success
-            for (String currentDN : fields.get("dn")) {
-                eventProcessingDates.put(currentDN, null);
-            }
-        }
-    }
-
-    public void validateCacheXml(String dn, String xmlFile) throws IdMUnitException, ParseException {
-        File fileToDelete = new File(xmlFile);
-        byte[] driverStatistics = null;
-        if (eventProcessingDates.get(dn) != null && eventProcessingDates.get(dn).equalsIgnoreCase(SUCCESS_FLAG)) {
-            fileToDelete.delete();
-            return;
-        }
-
-        try {
-            GetDriverStatsResponse cacheResponse = (GetDriverStatsResponse)ldapContext.extendedOperation(new GetDriverStatsRequest(dn, 10));
-            driverStatistics = retrieveChunkedData(ldapContext, cacheResponse.getDataHandle(), cacheResponse.getDataSize());
-        } catch (LDAPException | NamingException e) {
-            e.printStackTrace();
-        }
-
-        Document doc = getXmlAsDocument(driverStatistics);
-
-        Node newestTimeStamp;
-        Node oldestTimeStamp;
-
-        String eventProcessingDate = eventProcessingDates.get(dn);
-
-        try {
-            newestTimeStamp = getXPathResultNode(doc, "/driver-info/subscriber/cache/transactions/newest");
-            oldestTimeStamp = getXPathResultNode(doc, "/driver-info/subscriber/cache/transactions/oldest");
-            if (newestTimeStamp == null || oldestTimeStamp == null) { //Cache is empty. Toggle the flag
-                if (eventProcessingDate == null) {
-                    eventProcessingDates.put(dn, CACHE_EMPTY_FLAG);
-                    throw new IdMUnitFailureException(dn + ": First Pass. Cache Is Empty");
-                } else { //Flag is set or a date is set, Success: set to null
-                    eventProcessingDates.put(dn, SUCCESS_FLAG);
-                    //Success, fall out without error
-                }
-            } else if (eventProcessingDate == null) {
-                //Set the processing date
-                eventProcessingDates.put(dn, newestTimeStamp.getTextContent());
-                throw new IdMUnitFailureException(dn + ": First Pass. Cache Not Empty");
-            } else { //EVENT_PROCESSING_DATE isn't null
-                if (eventProcessingDate.equalsIgnoreCase(CACHE_EMPTY_FLAG)) {
-                    eventProcessingDates.put(dn, newestTimeStamp.getTextContent());
-                    throw new IdMUnitFailureException(dn + ": Cache Just Set. Event Is Processing");
-                } else {
-                    //If the date is after the newest - fail
-                    if (eventProcessingDate.compareTo(oldestTimeStamp.getTextContent()) < 0) {
-                        //Success The event has been processed
-                        eventProcessingDates.put(dn, SUCCESS_FLAG);
-                    } else if (eventProcessingDate.compareTo(oldestTimeStamp.getTextContent()) >= 0) {
-                        //Failure The event has not been processed yet
-                        throw new IdMUnitFailureException(dn + ": Cache Processing, Event Still Processing");
-                    }
-                }
-            }
-
-        } finally {
-            fileToDelete.delete();
-        }
-    }
-    */
 }
