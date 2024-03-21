@@ -269,7 +269,10 @@ public class DTF2Connector extends BasicConnector {
         boolean foundAtLeastOneRow = false;
 
         updateCachedRows();
+        int successfulMatches = 0;
+
         for (String[] rowData : cachedRows) {
+            successfulMatches = 0; // we're starting a new row; so reset the counter.
             if (rowData[rowKeyIndex].equalsIgnoreCase(expectedKeyValue)) {
                 foundAtLeastOneRow = true;
                 // We found a row to validate, Loop through the expected values:
@@ -285,6 +288,11 @@ public class DTF2Connector extends BasicConnector {
                     Pattern p = Pattern.compile(expectedValue, insensitive ? Pattern.CASE_INSENSITIVE : Pattern.DOTALL);
                     if (p.matcher(actualValue).matches()) {
                         log.info(STR_SUCCESS + ": validating attribute: [" + header + "] EXPECTED: [" + expectedValue + "] ACTUAL: [" + actualValue + "]");
+                        successfulMatches++;
+                        if (successfulMatches == rowData.length) {
+                            // If we succeeded on every row in this validation, exit now!
+                            break;
+                        }
                     } else {
                         failures.add(header + " " + "expected:<[" + expectedValue + "]> but was:<[" + actualValue + "]>");
                     }
